@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clube de Choro do Brasileirinho 🎶</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos customizados -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="body-app" class="bg-amber-50/40 text-stone-800 min-h-screen p-4 md:p-8 selection:bg-emerald-100 transition-colors duration-300">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="relative text-center mb-10 transform hover:scale-102 transition-transform duration-300">
+            <button onclick="alternarModoNoturno()" class="absolute right-2 top-2 p-2 rounded-full bg-stone-200/60 hover:bg-stone-200 dark:bg-stone-800 text-lg cursor-pointer transition" title="Alternar Modo Roda Noturna">
+                <span id="dark-mode-icon">🌙</span>
+            </button>
+            <span class="text-5xl">🎶</span>
+            <h1 class="text-4xl font-black text-emerald-800 dark:text-emerald-400 tracking-tight mt-2 drop-shadow-xs">Brasileirinho</h1>
+            <p class="text-amber-700/80 dark:text-amber-400/90 font-medium tracking-wide">Clube de Choro do Brasileirinho: Registro dos Encontros</p>
+        </header>
+
+        <div class="flex bg-stone-200/60 p-1.5 rounded-full mb-8 max-w-md mx-auto shadow-inner">
+            <button onclick="trocarAba('consulta-tab')" id="btn-consulta" class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold text-emerald-900 bg-white shadow-xs transition-all cursor-pointer tab-btn">
+                🔍 Encontros & Filtros
+            </button>
+            <button onclick="trocarAba('dashboard-tab')" id="btn-dashboard" class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold text-stone-600 hover:text-stone-400 transition-all cursor-pointer tab-btn">
+                📊 Painel & Estatísticas
+            </button>
+        </div>
+
+        <div id="consulta-tab" class="tab-content block space-y-6">
+            <div class="bg-white rounded-2xl shadow-md border border-amber-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-black text-stone-800 flex items-center gap-2">🔍 Filtros Avançados</h2>
+                    <span id="badge-filtros" class="hidden text-xs bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 animate-pulse">
+                        Filtro Ativo
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative">
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Busca Geral</label>
+                        <input type="text" id="filtro-busca" oninput="agendarFiltragem('filtro-busca')" placeholder="Nome, Choro ou Compositor..." class="w-full rounded-xl border-2 border-stone-200 p-2.5 text-sm outline-none focus:border-emerald-500 transition-all pr-8 bg-white dark:bg-stone-900">
+                        <button id="clear-filtro-busca" onclick="limparCampoFiltro('filtro-busca')" class="absolute right-3 top-[32px] text-stone-400 hover:text-rose-500 hidden cursor-pointer transition-colors" title="Limpar busca">✖</button>
+                    </div>
+                    
+                    <div class="relative">
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Instrumento</label>
+                        <input type="text" id="filtro-instrumento" oninput="agendarFiltragem('filtro-instrumento')" placeholder="Digite o nome do instrumento" class="w-full rounded-xl border-2 border-stone-200 p-2.5 text-sm outline-none focus:border-emerald-500 transition-all pr-8 bg-white dark:bg-stone-900">
+                        <button id="clear-filtro-instrumento" onclick="limparCampoFiltro('filtro-instrumento')" class="absolute right-3 top-[32px] text-stone-400 hover:text-rose-500 hidden cursor-pointer transition-colors" title="Limpar instrumento">✖</button>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Intervalo de Datas</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="filtro-data-inicio" onchange="filtrarAcervo()" class="w-full rounded-xl border-2 border-stone-200 p-2 text-xs outline-none focus:border-emerald-500 transition-all bg-white dark:bg-stone-900">
+                            <input type="date" id="filtro-data-fim" onchange="filtrarAcervo()" class="w-full rounded-xl border-2 border-stone-200 p-2 text-xs outline-none focus:border-emerald-500 transition-all bg-white dark:bg-stone-900">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-stone-100/60 items-center">
+                    <span class="text-[11px] font-black text-stone-400 uppercase tracking-wider">Atalhos:</span>
+                    <button onclick="aplicarAtalhoFiltro('Percussão', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🪘 Percussão</button>
+                    <button onclick="aplicarAtalhoFiltro('Clarinete', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🎷 Clarinete</button>
+                    <button onclick="aplicarAtalhoFiltro('Flauta', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🎵 Flauta</button>
+                    <button onclick="aplicarAtalhoFiltro('Pixinguinha', 'busca')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">✍️ Pixinguinha</button>
+                </div>
+                
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-stone-100">
+                    <p id="texto-contador-registros" class="text-xs text-stone-500 font-medium">Iniciando ambiente...</p>
+                    <div class="flex gap-2">
+                        <button onclick="exportarCSVFiltrado()" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 py-1.5 px-4 rounded-full cursor-pointer transition">
+                            📥 Exportar Filtrados
+                        </button>
+                        <button onclick="resetarFiltros()" class="text-xs font-bold text-rose-700 bg-rose-50 dark:bg-rose-950/40 py-1.5 px-4 rounded-full cursor-pointer transition">
+                            Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md border border-amber-100 p-6">
+                <h2 class="text-xl font-black text-stone-800 mb-4 flex items-center gap-2">📜 Histórico dos Encontros:</h2>
+                <div id="historico-lista" class="space-y-3">
+                    <div class="animate-pulse space-y-3" id="main-skeleton">
+                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
+                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
+                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard-tab" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-emerald-800 text-emerald-50 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-70">Resumo Geral</span>
+                        <span id="txt-filtro-aviso-dash" class="text-[10px] bg-emerald-900/60 text-emerald-200 font-bold px-2 py-0.5 rounded-md hidden">Visão Filtrada</span>
+                    </div>
+                    <div class="flex justify-between items-baseline mt-4">
+                        <div><p class="text-3xl font-black" id="dash-total-rodas">0</p><p class="text-xs opacity-80">Total de Rodas</p></div>
+                        <div><p class="text-3xl font-black" id="dash-total-musicos">0</p><p class="text-xs opacity-80">Musicistas Únicos</p></div>
+                        <div><p class="text-3xl font-black" id="dash-total-musicas">0</p><p class="text-xs opacity-80">Choros Tocados</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-500 text-amber-950 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-black uppercase tracking-widest text-amber-900/80">👑 Recorde de Presença</span>
+                    <div class="mt-4">
+                        <p class="text-xl font-black leading-tight" id="chart-val-pico-musicos">Calculando...</p>
+                        <p class="text-xs text-amber-900/70 mt-1">O encontro mais cheio no recorte selecionado.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex bg-stone-100 p-1 rounded-xl max-w-xs mx-auto justify-between shadow-xs">
+                <button onclick="alternarVisaoDoPainel('mini')" id="sub-btn-mini" class="flex-1 py-1.5 px-3 text-xs font-black rounded-lg transition-all bg-white text-emerald-950 shadow-2xs cursor-pointer">
+                    📋 Visão Rápida
+                </button>
+                <button onclick="alternarVisaoDoPainel('avancada')" id="sub-btn-avancada" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg transition-all text-stone-500 hover:text-stone-400 cursor-pointer">
+                    📈 Gráficos Avançados
+                </button>
+            </div>
+
+            <div id="dash-visao-mini" class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
+                <div class="space-y-4">
+                    <h3 class="font-black text-sm text-emerald-900 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">🎵 Mais Tocadas</h3>
+                    <div id="ranking-musicas" class="space-y-3"></div>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-black text-sm text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">✍️ Compositores</h3>
+                    <div id="ranking-compositores" class="space-y-3"></div>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-black text-sm text-stone-700 dark:text-stone-300 uppercase tracking-wider flex items-center gap-1">👥 Dias mais Cheios</h3>
+                    <div id="ranking-dias-cheios" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div id="dash-visao-avancada" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
+                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">📈 Evolução de Presença nas Rodas</h4>
+                    <div class="relative flex-1"><canvas id="chart-evolucao-presenca"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
+                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">🎵 Top 10 Choros Mais Executados</h4>
+                    <div class="relative flex-1"><canvas id="chart-top-musicas"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
+                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">✍️ Top 10 Compositores do Repertório</h4>
+                    <div class="relative flex-1"><canvas id="chart-top-compositores"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
+                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">🎷 Mix de Instrumentos Identificados</h4>
+                    <div class="relative flex-1"><canvas id="chart-mix-instrumentos"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica do app -->
+    <script src="app.js" defer></script>
+</body>
+</html>
