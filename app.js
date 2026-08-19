@@ -18,7 +18,7 @@ const SUPABASE_URL = "https://tligeoszfzifgqxymoyn.supabase.co"; // ex: https://
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaWdlb3N6ZnppZmdxeHltb3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5MTU2NTYsImV4cCI6MjEwMjQ5MTY1Nn0.5LhxP0J1ohPaGMqiG1fq91ypPMK8pcG52SzIPoSqc6g"; // começa com eyJ...
 
 /** Mantido por compatibilidade - não usa mais, mas deixa aí */
-// const API_RODAS_URL = "https://script.google.com/macros/s/AKfycbzPIbyianh-eI0SMVW1Xj4Qcf6dpYwDIJ_isycG8_FooXVI53Cz4Mo2e9r9VYAORkFJow/exec"; //
+const API_RODAS_URL = "https://script.google.com/macros/s/AKfycbzPIbyianh-eI0SMVW1Xj4Qcf6dpYwDIJ_isycG8_FooXVI53Cz4Mo2e9r9VYAORkFJow/exec"; //
 
 /** Lista completa de encontros vinda do Supabase (nunca filtrada) */
 let acervoCompleto = [];
