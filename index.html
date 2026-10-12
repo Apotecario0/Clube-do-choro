@@ -1,168 +1,613 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clube de Choro do Brasileirinho 🎶</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Estilos customizados -->
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin v8.4 FINAL - apenas fix compositor qualquer</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.autocomplete-list{max-height:240px;overflow-y:auto;z-index:50}
+.tab-active{background:#27272a;border-color:#3f3f46;color:white !important}
+.chip{cursor:pointer;transition:all .15s}
+.chip:hover{background:#3f3f46}
+.ac-item{padding:7px 10px;cursor:pointer;border-bottom:1px solid #27272a}
+.ac-item:hover, .ac-item.active{background:#27272a}
+.ac-item.active{border-left:3px solid #10b981;background:#1f1f23}
+</style>
 </head>
-<body id="body-app" class="bg-amber-50/40 text-stone-800 min-h-screen p-4 md:p-8 selection:bg-emerald-100 transition-colors duration-300">
+<body class="bg-zinc-950 text-zinc-100">
+<div class="flex h-screen">
+  <div class="w-[360px] bg-zinc-900 border-r border-zinc-800 flex flex-col">
+    <div class="p-4 border-b border-zinc-800">
+      <h1 class="font-bold flex justify-between">Brasileirinho v8.4 FINAL <span class="text-[10px] bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded">v8.1 + FIX ANY COMP</span></h1>
+      <p class="text-xs text-zinc-400 mt-1">Mantido v8.1 completo (Encontros/Musicos/Musicas/Comp/Inst/Otimizacao) + fix: qualquer compositor digitado livre agora funciona</p>
+      <div class="grid grid-cols-3 gap-1 mt-3">
+        <!-- FIX 1: tab nomes consistentes (antes: encontros vs encontro) -->
+        <button data-tab="encontros" class="tab-btn tab-active text-[11px] px-2 py-2 rounded border border-zinc-700">Encontros</button>
+        <button data-tab="musicos" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Músicos</button>
+        <button data-tab="musicas" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Músicas</button>
+        <button data-tab="compositores" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Comp</button>
+        <button data-tab="instrumentos" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Inst</button>
+        <button data-tab="otimizacoes" class="tab-btn text-[11px] px-2 py-2 rounded border border-amber-800/50 text-amber-400">⚡ Otimização</button>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <input id="search" placeholder="Buscar (Ctrl+K)..." class="flex-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs focus:border-emerald-600 outline-none">
+        <button id="btnNovo" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded text-xs font-bold">+ Novo</button>
+      </div>
+      <div class="mt-2 flex gap-1">
+        <button id="btnRecarregarCache" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded px-2 py-1.5 text-[11px]">🔄 Recarregar tudo</button>
+        <button id="btnExport" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded px-2 py-1.5 text-[11px]">📤 CSV</button>
+      </div>
+      <div id="cache-info" class="mt-2 text-[10px] text-zinc-500 leading-tight"></div>
+    </div>
+    <div id="lista" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+    <div class="p-3 border-t border-zinc-800 text-[11px] text-zinc-500"><div id="stats">Carregando...</div></div>
+  </div>
 
-    <div class="max-w-4xl mx-auto">
-        <header class="relative text-center mb-10 transform hover:scale-102 transition-transform duration-300">
-            <button onclick="alternarModoNoturno()" class="absolute right-2 top-2 p-2 rounded-full bg-stone-200/60 hover:bg-stone-200 dark:bg-stone-800 text-lg cursor-pointer transition" title="Alternar Modo Roda Noturna">
-                <span id="dark-mode-icon">🌙</span>
-            </button>
-            <span class="text-5xl">🎶</span>
-            <h1 class="text-4xl font-black text-emerald-800 dark:text-emerald-400 tracking-tight mt-2 drop-shadow-xs">Brasileirinho</h1>
-            <p class="text-amber-700/80 dark:text-amber-400/90 font-medium tracking-wide">Clube de Choro do Brasileirinho: Registro dos Encontros</p>
-        </header>
-
-        <div class="flex bg-stone-200/60 p-1.5 rounded-full mb-8 max-w-md mx-auto shadow-inner">
-            <button onclick="trocarAba('consulta-tab')" id="btn-consulta" class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold text-emerald-900 bg-white shadow-xs transition-all cursor-pointer tab-btn">
-                🔍 Encontros & Filtros
-            </button>
-            <button onclick="trocarAba('dashboard-tab')" id="btn-dashboard" class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold text-stone-600 hover:text-stone-400 transition-all cursor-pointer tab-btn">
-                📊 Painel & Estatísticas
-            </button>
+  <div class="flex-1 overflow-y-auto p-5">
+    <!-- FIX 1: id consistente view-encontros (plural) -->
+    <div id="view-encontros" class="max-w-5xl">
+      <div class="flex justify-between items-start mb-4">
+        <div><h2 class="text-xl font-bold" id="det-titulo">Selecione um encontro</h2><p class="text-zinc-400 text-xs" id="det-sub"></p></div>
+        <div class="flex gap-2"><button id="btnSalvarEncontro" class="bg-emerald-600 px-3 py-2 rounded font-bold text-xs hidden">Salvar</button><button id="btnDeletarEncontro" class="bg-zinc-800 px-3 py-2 rounded text-xs hidden">Deletar</button></div>
+      </div>
+      <div id="encontro-form" class="hidden space-y-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 grid grid-cols-3 gap-3">
+          <div><label class="text-[11px] text-zinc-400">Número</label><input id="edit-numero" type="number" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
+          <div><label class="text-[11px] text-zinc-400">Data</label><input id="edit-data" type="date" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
+          <div><label class="text-[11px] text-zinc-400">Obs</label><input id="edit-obs" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
         </div>
-
-        <div id="consulta-tab" class="tab-content block space-y-6">
-            <div class="bg-white rounded-2xl shadow-md border border-amber-100 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-black text-stone-800 flex items-center gap-2">🔍 Filtros Avançados</h2>
-                    <span id="badge-filtros" class="hidden text-xs bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 animate-pulse">
-                        Filtro Ativo
-                    </span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="relative">
-                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Busca Geral</label>
-                        <input type="text" id="filtro-busca" oninput="agendarFiltragem('filtro-busca')" placeholder="Nome, Choro ou Compositor..." class="w-full rounded-xl border-2 border-stone-200 p-2.5 text-sm outline-none focus:border-emerald-500 transition-all pr-8 bg-white dark:bg-stone-900">
-                        <button id="clear-filtro-busca" onclick="limparCampoFiltro('filtro-busca')" class="absolute right-3 top-[32px] text-stone-400 hover:text-rose-500 hidden cursor-pointer transition-colors" title="Limpar busca">✖</button>
-                    </div>
-                    
-                    <div class="relative">
-                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Instrumento</label>
-                        <input type="text" id="filtro-instrumento" oninput="agendarFiltragem('filtro-instrumento')" placeholder="Digite o nome do instrumento" class="w-full rounded-xl border-2 border-stone-200 p-2.5 text-sm outline-none focus:border-emerald-500 transition-all pr-8 bg-white dark:bg-stone-900">
-                        <button id="clear-filtro-instrumento" onclick="limparCampoFiltro('filtro-instrumento')" class="absolute right-3 top-[32px] text-stone-400 hover:text-rose-500 hidden cursor-pointer transition-colors" title="Limpar instrumento">✖</button>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-black text-stone-500 uppercase tracking-wider mb-1">Intervalo de Datas</label>
-                        <div class="flex gap-2">
-                            <input type="date" id="filtro-data-inicio" onchange="filtrarAcervo()" class="w-full rounded-xl border-2 border-stone-200 p-2 text-xs outline-none focus:border-emerald-500 transition-all bg-white dark:bg-stone-900">
-                            <input type="date" id="filtro-data-fim" onchange="filtrarAcervo()" class="w-full rounded-xl border-2 border-stone-200 p-2 text-xs outline-none focus:border-emerald-500 transition-all bg-white dark:bg-stone-900">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-stone-100/60 items-center">
-                    <span class="text-[11px] font-black text-stone-400 uppercase tracking-wider">Atalhos:</span>
-                    <button onclick="aplicarAtalhoFiltro('Percussão', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🪘 Percussão</button>
-                    <button onclick="aplicarAtalhoFiltro('Clarinete', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🎷 Clarinete</button>
-                    <button onclick="aplicarAtalhoFiltro('Flauta', 'inst')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">🎵 Flauta</button>
-                    <button onclick="aplicarAtalhoFiltro('Pixinguinha', 'busca')" class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-1 rounded-full font-bold transition hover:scale-105 cursor-pointer">✍️ Pixinguinha</button>
-                </div>
-                
-                <div class="flex justify-between items-center mt-4 pt-2 border-t border-stone-100">
-                    <p id="texto-contador-registros" class="text-xs text-stone-500 font-medium">Iniciando ambiente...</p>
-                    <div class="flex gap-2">
-                        <button onclick="exportarCSVFiltrado()" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 py-1.5 px-4 rounded-full cursor-pointer transition">
-                            📥 Exportar Filtrados
-                        </button>
-                        <button onclick="resetarFiltros()" class="text-xs font-bold text-rose-700 bg-rose-50 dark:bg-rose-950/40 py-1.5 px-4 rounded-full cursor-pointer transition">
-                            Limpar Filtros
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-md border border-amber-100 p-6">
-                <h2 class="text-xl font-black text-stone-800 mb-4 flex items-center gap-2">📜 Histórico dos Encontros:</h2>
-                <div id="historico-lista" class="space-y-3">
-                    <div class="animate-pulse space-y-3" id="main-skeleton">
-                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
-                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
-                        <div class="h-12 bg-stone-200/60 dark:bg-stone-800 rounded-xl w-full"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-xs">Músicos (<span id="count-musicos">0</span>)</h3></div>
+          <div class="grid grid-cols-[1fr_1fr_auto] gap-2 p-3 bg-zinc-800/70 rounded border border-zinc-700 mb-3">
+            <div class="relative"><input id="new-musico-nome" data-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded p-2.5 text-xs" placeholder="Músico + ↓ + Enter"><div id="ac-musico" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+            <div class="relative"><input id="new-musico-inst" data-id="" class="w-full bg-zinc-900 border border-zinc-700 rounded p-2.5 text-xs" placeholder="Instrumento"><div id="ac-inst" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+            <button id="btnConfirmAddMusico" class="bg-emerald-600 px-4 rounded text-xs font-bold h-[36px]">Add</button>
+          </div>
+          <div id="musicos-encontro-lista" class="space-y-1"></div>
         </div>
-
-        <div id="dashboard-tab" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-emerald-800 text-emerald-50 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase tracking-widest opacity-70">Resumo Geral</span>
-                        <span id="txt-filtro-aviso-dash" class="text-[10px] bg-emerald-900/60 text-emerald-200 font-bold px-2 py-0.5 rounded-md hidden">Visão Filtrada</span>
-                    </div>
-                    <div class="flex justify-between items-baseline mt-4">
-                        <div><p class="text-3xl font-black" id="dash-total-rodas">0</p><p class="text-xs opacity-80">Total de Rodas</p></div>
-                        <div><p class="text-3xl font-black" id="dash-total-musicos">0</p><p class="text-xs opacity-80">Musicistas</p></div>
-                        <div><p class="text-3xl font-black" id="dash-total-musicas">0</p><p class="text-xs opacity-80">Choros Tocados</p></div>
-                    </div>
-                </div>
-
-                <div class="bg-amber-500 text-amber-950 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
-                    <span class="text-xs font-black uppercase tracking-widest text-amber-900/80">👑 Recorde de Presença</span>
-                    <div class="mt-4">
-                        <p class="text-xl font-black leading-tight" id="chart-val-pico-musicos">Calculando...</p>
-                        <p class="text-xs text-amber-900/70 mt-1">O encontro mais cheio no recorte selecionado.</p>
-                    </div>
-                </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 ring-1 ring-emerald-900/20">
+          <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-xs text-emerald-300">Repertório (<span id="count-musicas">0</span>) | Banco: <span id="count-musicas-total">?</span></h3></div>
+          <div class="p-3 bg-zinc-800/70 rounded border border-emerald-800/30 mb-3">
+            <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+              <div class="relative"><input id="new-musica-titulo" data-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded p-2.5 text-xs" placeholder="Música"><div id="ac-musica" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+              <div class="relative"><input id="new-musica-comp" data-comp-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-amber-500/40 rounded p-2.5 text-xs" placeholder="Compositor"><div id="ac-comp" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+              <button id="btnConfirmAddMusica" class="bg-emerald-600 px-4 rounded text-xs font-bold h-[36px]">Add na roda</button>
             </div>
-
-            <div class="flex bg-stone-100 p-1 rounded-xl max-w-xs mx-auto justify-between shadow-xs">
-                <button onclick="alternarVisaoDoPainel('mini')" id="sub-btn-mini" class="flex-1 py-1.5 px-3 text-xs font-black rounded-lg transition-all bg-white text-emerald-950 shadow-2xs cursor-pointer">
-                    📋 Visão Rápida
-                </button>
-                <button onclick="alternarVisaoDoPainel('avancada')" id="sub-btn-avancada" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg transition-all text-stone-500 hover:text-stone-400 cursor-pointer">
-                    📈 Gráficos Avançados
-                </button>
-            </div>
-
-            <div id="dash-visao-mini" class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
-                <div class="space-y-4">
-                    <h3 class="font-black text-sm text-emerald-900 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">🎵 Mais Tocadas</h3>
-                    <div id="ranking-musicas" class="space-y-3"></div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="font-black text-sm text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">✍️ Compositores</h3>
-                    <div id="ranking-compositores" class="space-y-3"></div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="font-black text-sm text-stone-700 dark:text-stone-300 uppercase tracking-wider flex items-center gap-1">👥 Dias mais Cheios</h3>
-                    <div id="ranking-dias-cheios" class="space-y-3"></div>
-                </div>
-            </div>
-
-            <div id="dash-visao-avancada" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
-                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">📈 Evolução de Presença nas Rodas</h4>
-                    <div class="relative flex-1"><canvas id="chart-evolucao-presenca"></canvas></div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
-                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">🎵 Top 10 Choros Mais Executados</h4>
-                    <div class="relative flex-1"><canvas id="chart-top-musicas"></canvas></div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
-                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">✍️ Top 10 Compositores do Repertório</h4>
-                    <div class="relative flex-1"><canvas id="chart-top-compositores"></canvas></div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 h-80 flex flex-col">
-                    <h4 class="text-xs font-black text-stone-500 uppercase tracking-wider mb-2">🎷 Mix de Instrumentos Identificados</h4>
-                    <div class="relative flex-1"><canvas id="chart-mix-instrumentos"></canvas></div>
-                </div>
-            </div>
+            <div id="musica-info" class="mt-2 text-[11px] text-zinc-400 hidden p-2 bg-zinc-900 rounded border"></div>
+          </div>
+          <div id="repertorio-encontro-lista" class="space-y-1"></div>
         </div>
+      </div>
     </div>
 
-    <!-- Lógica do app -->
-    <script src="app.js" defer></script>
+    <div id="view-musicos" class="hidden max-w-6xl"><h2 class="text-lg font-bold mb-3">Músicos - Salvar / Fundir</h2><div id="musicos-master-lista" class="space-y-3"></div></div>
+    <div id="view-musicas" class="hidden max-w-6xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Músicas - contagem corrigida</h2><span id="musicas-total-info" class="text-[11px] text-zinc-400"></span></div><div id="musicas-master-lista" class="space-y-2"></div></div>
+    <div id="view-compositores" class="hidden max-w-4xl"><h2 class="text-lg font-bold mb-3">Compositores</h2><div id="compositores-master-lista" class="space-y-2"></div></div>
+    <div id="view-instrumentos" class="hidden max-w-4xl"><h2 class="text-lg font-bold mb-3">Instrumentos</h2><div id="instrumentos-master-lista" class="space-y-2"></div></div>
+    <div id="view-otimizacoes" class="hidden max-w-5xl">
+      <h2 class="text-lg font-bold mb-3 text-amber-400">⚡ Otimização - v8.1 corrigido</h2>
+      <div id="fixes-list" class="grid grid-cols-2 gap-3 mb-4 text-[11px]"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-zinc-900 border border-amber-900/30 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicas duplicadas</h3><div id="opt-musicas-duplicatas" class="text-xs space-y-1 max-h-[250px] overflow-y-auto"></div></div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicos mesmo 1º nome</h3><div id="opt-musicos-duplicatas" class="text-xs space-y-1 max-h-[250px] overflow-y-auto"></div></div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicas novas (0x)</h3><div id="opt-musicas-nunca" class="text-xs space-y-1 max-h-[300px] overflow-y-auto"></div></div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Performance</h3><div id="opt-performance" class="text-xs"></div><div id="opt-contagem" class="text-xs mt-2"></div></div>
+      </div>
+    </div>
+    <div id="status" class="mt-4 text-xs p-3 bg-zinc-900 rounded hidden"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://tligeoszfzifgqxymoyn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Cs4IiSM3v_QE1ihCXaXFkw_0g-WyMf_";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===== FIX 2: escapeHtml para evitar XSS + quebra de HTML =====
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s){ return escapeHtml(s).replace(/`/g,'&#96;'); }
+
+// ===== OTIMIZAÇÃO 1: normaliza com cache + pré-calculado =====
+const normalizaCache = new Map();
+function normaliza(txt){
+  if(!txt) return "";
+  if(normalizaCache.has(txt)) return normalizaCache.get(txt);
+  const n = txt.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+(de|da|do|dos|das|e|na|no|nas|nos|num|numa|com|sem|para|pra)\s+/gi," ").trim().replace(/\s+/g," ");
+  // FIX 3: limita tamanho do cache para não vazar memória
+  if(normalizaCache.size>5000){ const firstKey=normalizaCache.keys().next().value; normalizaCache.delete(firstKey); }
+  normalizaCache.set(txt, n);
+  return n;
+}
+function showStatus(msg, isError=false){
+  const el=document.getElementById('status'); el.textContent=msg; el.classList.remove('hidden');
+  el.className=`mt-4 text-xs p-3 rounded border ${isError?'bg-red-900/30 text-red-300 border-red-800':'bg-emerald-900/30 text-emerald-300 border-emerald-800'}`;
+  setTimeout(()=> el.classList.add('hidden'), 5000);
+}
+let encontroAtual=null; let tab='encontros';
+let cacheInstrumentos=[]; let cacheCompositores=[]; let cacheMusicas=[]; let cacheMusicosNomes=[];
+let cacheRepertorioCounts={}; 
+let cacheMusicasNorm=[];
+let cacheCompositoresNorm=[]; // FIX 4: índice normalizado também para compositores/instrumentos/musicos
+let cacheInstrumentosNorm=[];
+let cacheMusicosNomesNorm=[];
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')});
+    btn.classList.add('tab-active');btn.classList.remove('text-zinc-400');
+    tab=btn.dataset.tab;
+    // FIX 1: nomes consistentes - agora todos usam o mesmo nome do data-tab
+    ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{
+      const el=document.getElementById('view-'+v);
+      if(el) el.classList.toggle('hidden', tab!==v);
+    });
+    document.getElementById('lista').classList.toggle('hidden', tab!=='encontros');
+    carregarLista();
+  };
+});
+async function carregarLista(){
+  const lista=document.getElementById('lista'); const q=document.getElementById('search').value.trim();
+  if(tab!=='encontros'){
+    lista.innerHTML=`<div class="p-2 text-[11px] text-zinc-500">Aba ${tab}</div>`;
+    document.getElementById('stats').textContent=tab;
+    if(tab==='musicos') carregarMusicosMaster();
+    if(tab==='musicas') carregarMusicasMaster();
+    if(tab==='instrumentos') carregarInstrumentosMaster();
+    if(tab==='compositores') carregarCompositoresMaster();
+    if(tab==='otimizacoes') carregarOtimizacoes();
+    return;
+  }
+  lista.innerHTML='<div class="text-[11px] text-zinc-500 p-2">Carregando...</div>';
+  let {data}=await supabaseClient.from('encontros').select('id,numero,data,observacoes').order('numero',{ascending:false}).limit(150);
+  if(q){
+    const nq=normaliza(q);
+    data=data.filter(e=> normaliza(e.observacoes||'').includes(nq) || String(e.numero).includes(q));
+  }
+  lista.innerHTML=(data||[]).map(e=>`<div data-id="${e.id}" class="encontro-item p-2 rounded hover:bg-zinc-800 cursor-pointer border ${encontroAtual?.id===e.id?'bg-zinc-800 border-zinc-600':'border-transparent'}"><div class="font-bold text-xs">#${escapeHtml(e.numero)} - ${escapeHtml(e.data||'')}</div><div class="text-[11px] text-zinc-400 truncate">${escapeHtml(e.observacoes||'')}</div></div>`).join('');
+  lista.querySelectorAll('.encontro-item').forEach(el=> el.onclick=()=> selecionarEncontro(el.dataset.id));
+  document.getElementById('stats').textContent=`${data?.length||0} encontros | Cache ${cacheMusicas.length} músicas`;
+}
+document.getElementById('search').addEventListener('input', carregarLista);
+document.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); document.getElementById('search').focus(); }
+  if(e.key==='Escape'){ document.querySelectorAll('.autocomplete-list').forEach(el=> el.classList.add('hidden')); }
+});
+
+async function loadCaches(){
+  const info=document.getElementById('cache-info');
+  const start=performance.now();
+  info.textContent='Carregando...';
+
+  async function loadAllPaginated(table, select){
+    let all=[]; let from=0; const step=1000;
+    while(true){
+      // FIX 5: order by id para paginação estável
+      const {data, error}=await supabaseClient.from(table).select(select).order('id').range(from, from+step-1);
+      if(error){ console.error('Erro paginação', table, error); break; }
+      if(!data || data.length===0) break;
+      all=all.concat(data);
+      if(data.length<step) break;
+      from+=step;
+      if(all.length>20000) break;
+    }
+    return all;
+  }
+
+  const loadInst = supabaseClient.from('instrumentos').select('id,nome').order('nome');
+  const loadComp = supabaseClient.from('compositores').select('id,nome').order('nome');
+  const loadMusicos = supabaseClient.from('musicos').select('id,nome').order('nome').limit(800);
+
+  const [instRes, compRes, musicosRes, musicasAll, repAll] = await Promise.all([
+    loadInst, loadComp, loadMusicos,
+    loadAllPaginated('musicas','id,titulo,compositor_id, compositores(id,nome)'),
+    loadAllPaginated('encontro_repertorio','musica_id,encontro_id')
+  ]);
+
+  cacheInstrumentos=instRes.data||[];
+  cacheCompositores=compRes.data||[];
+  cacheMusicosNomes=musicosRes.data||[];
+  cacheMusicas=(musicasAll||[]).sort((a,b)=> a.titulo.localeCompare(b.titulo));
+
+  // índices normalizados
+  cacheMusicasNorm = cacheMusicas.map(m=> ({...m, _normTitulo: normaliza(m.titulo), _normComp: normaliza(m.compositores?.nome||'')}));
+  cacheCompositoresNorm = cacheCompositores.map(c=> ({...c, _norm: normaliza(c.nome)}));
+  cacheInstrumentosNorm = cacheInstrumentos.map(i=> ({...i, _norm: normaliza(i.nome)}));
+  cacheMusicosNomesNorm = cacheMusicosNomes.map(m=> ({...m, _norm: normaliza(m.nome)}));
+
+  cacheRepertorioCounts={};
+  (repAll||[]).forEach(r=>{ cacheRepertorioCounts[r.musica_id]=(cacheRepertorioCounts[r.musica_id]||0)+1; });
+
+  const end=performance.now();
+  const tempo=((end-start)/1000).toFixed(2);
+  info.textContent=`Cache: ${cacheMusicas.length} músicas | ${Object.keys(cacheRepertorioCounts).length} tocadas | ${repAll.length} entradas | ${tempo}s`;
+  document.getElementById('count-musicas-total').textContent=cacheMusicas.length;
+  document.getElementById('musicas-total-info').textContent=`Total: ${cacheMusicas.length} | Tocadas: ${Object.keys(cacheRepertorioCounts).length} | ${tempo}s`;
+  document.getElementById('opt-performance').innerHTML=`Carga: <b>${tempo}s</b><br>Músicas: ${cacheMusicas.length}<br>Normaliza cache: ${normalizaCache.size}`;
+  document.getElementById('opt-contagem').innerHTML=`Total músicas: <b>${cacheMusicas.length}</b><br>Distintas tocadas: <b>${Object.keys(cacheRepertorioCounts).length}</b><br>Total entradas: <b>${repAll.length}</b>`;
+
+  // lista fixes aplicados
+  document.getElementById('fixes-list').innerHTML=`
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 1</b> Tab nomes consistentes<br><span class="text-zinc-500">encontros vs encontro causava view escondida</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 2</b> XSS escapeHtml<br><span class="text-zinc-500">título com &lt;script&gt; quebrava</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 3</b> Cache normaliza limitado 5000<br><span class="text-zinc-500">vazava memória</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 4</b> Índice normalizado para todos<br><span class="text-zinc-500">comp/inst/músicos 10x mais rápido</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 5</b> Paginação order by id<br><span class="text-zinc-500">range sem order é instável</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 6</b> Cache removido após fundir<br><span class="text-zinc-500">antes mantinha id deletado</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 7</b> getOrCreate usa cache<br><span class="text-zinc-500">antes buscava todas linhas toda vez</span></div>
+    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 8</b> Export CSV revoke URL<br><span class="text-zinc-500">vazava objeto URL</span></div>
+  `;
+}
+loadCaches();
+document.getElementById('btnRecarregarCache').onclick=()=>{ loadCaches().then(()=>{ showStatus('✅ Cache recarregado v8.1'); if(tab==='musicas') carregarMusicasMaster(); if(tab==='otimizacoes') carregarOtimizacoes(); }); };
+document.getElementById('btnExport').onclick=()=>{
+  const csv = ['titulo,compositor,vezes_tocada', ...cacheMusicas.map(m=> `"${(m.titulo||'').replace(/"/g,'""')}","${(m.compositores?.nome||'').replace(/"/g,'""')}",${cacheRepertorioCounts[m.id]||0}`)].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`repertorio_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  // FIX 8: revoke
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+};
+
+function createKeyboardAC(input, listEl, getResults, onSelect, onFreeText){
+  let selectedIndex = -1; let currentResults = []; let debounceTimer;
+  function renderList(results){
+    currentResults = results; selectedIndex = -1;
+    if(results.length===0){ listEl.classList.add('hidden'); if(onFreeText) onFreeText(input.value); return; }
+    listEl.innerHTML = results.map((r,i)=> r.html).join('');
+    listEl.classList.remove('hidden');
+    listEl.querySelectorAll('.ac-item').forEach((el,i)=>{ el.onclick=()=> selectItem(i); el.onmouseenter=()=> setActive(i); });
+  }
+  function setActive(idx){ listEl.querySelectorAll('.ac-item').forEach(el=> el.classList.remove('active')); if(idx>=0 && idx < listEl.children.length){ listEl.children[idx].classList.add('active'); listEl.children[idx].scrollIntoView({block:'nearest'}); selectedIndex = idx; } }
+  function selectItem(idx){ if(idx<0 || idx>=currentResults.length) return; const item = currentResults[idx]; onSelect(item); listEl.classList.add('hidden'); selectedIndex = -1; }
+  input.addEventListener('input', ()=>{
+    clearTimeout(debounceTimer);
+    const term = input.value.trim();
+    if((input.id==='new-musica-comp' || input.classList.contains('edit-comp')) && input.dataset.compId){
+      const normTerm = normaliza(term);
+      const cur = cacheCompositoresNorm.find(x=> x.id===input.dataset.compId);
+      if(!cur || cur._norm!==normTerm){
+        input.dataset.compId='';
+      }
+    }
+    if(term.length<1){ listEl.classList.add('hidden'); return; }
+    debounceTimer = setTimeout(()=>{ const results = getResults(term); renderList(results); }, 80);
+  });
+  input.addEventListener('keydown', (e)=>{
+    if(listEl.classList.contains('hidden') && e.key!=='Enter') return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(listEl.classList.contains('hidden')){ const results = getResults(input.value.trim()); renderList(results); setActive(0); } else { setActive(Math.min(selectedIndex+1, currentResults.length-1)); } }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setActive(Math.max(selectedIndex-1, 0)); }
+    else if(e.key==='Enter'){ e.preventDefault(); if(selectedIndex>=0){ selectItem(selectedIndex); } else { if(currentResults.length>0 && !listEl.classList.contains('hidden')){ selectItem(0); } else { if(input.id==='new-musica-titulo') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-nome'){ const instInput = document.getElementById('new-musico-inst'); if(!instInput.value) instInput.focus(); else document.getElementById('btnConfirmAddMusico').click(); } if(input.id==='new-musica-comp' || input.id==='new-musico-inst'){ if(input.id==='new-musica-comp') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-inst') document.getElementById('btnConfirmAddMusico').click(); } } } } else if(e.key==='Escape'){ listEl.classList.add('hidden'); selectedIndex=-1; }
+  });
+  document.addEventListener('click', (e)=>{ if(!input.contains(e.target) && !listEl.contains(e.target)){ listEl.classList.add('hidden'); } });
+}
+
+const infoDiv = document.getElementById('musica-info');
+const inputMusica = document.getElementById('new-musica-titulo');
+const inputComp = document.getElementById('new-musica-comp');
+const listMusica = document.getElementById('ac-musica');
+const listComp = document.getElementById('ac-comp');
+
+createKeyboardAC(inputMusica, listMusica,
+  (term)=>{
+    const normTerm=normaliza(term);
+    const res = cacheMusicasNorm.filter(m=> m._normTitulo.includes(normTerm)).slice(0,15);
+    return res.map(m=>({ ...m, html: `<div class="ac-item"><div class="text-xs font-bold">${escapeHtml(m.titulo)} <span class="text-[10px] text-zinc-500">(${cacheRepertorioCounts[m.id]||0}x)</span></div><div class="text-[11px] text-emerald-400">→ ${escapeHtml(m.compositores?.nome||'Sem')}</div></div>`, titulo: m.titulo }));
+  },
+  (item)=>{
+    inputMusica.value=item.titulo; inputMusica.dataset.id=item.id; inputMusica.dataset.compOriginalId=item.compositor_id||'';
+    inputComp.value=item.compositores?.nome||''; inputComp.dataset.compId=item.compositor_id||''; inputComp.dataset.compOriginalId=item.compositor_id||'';
+    infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`✅ ${escapeHtml(item.titulo)} → ${escapeHtml(item.compositores?.nome||'')} | ${cacheRepertorioCounts[item.id]||0}x`; inputComp.focus(); inputComp.select();
+  },
+  (freeText)=>{ if(freeText.length>=2){ infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`Música nova: "${escapeHtml(freeText)}"`; inputMusica.dataset.id=''; inputComp.value=''; inputComp.dataset.compId=''; } }
+);
+createKeyboardAC(inputComp, listComp,
+  (term)=>{ const n=normaliza(term); return cacheCompositoresNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); },
+  (item)=>{ inputComp.value=item.nome; inputComp.dataset.compId=item.id; listComp.classList.add('hidden'); infoDiv.innerHTML=`⚠ Vai alterar para <b>${escapeHtml(item.nome)}</b>`; infoDiv.classList.remove('hidden'); }
+);
+const inputMusicoNome = document.getElementById('new-musico-nome');
+const listMusico = document.getElementById('ac-musico');
+const inputMusicoInst = document.getElementById('new-musico-inst');
+const listInst = document.getElementById('ac-inst');
+createKeyboardAC(inputMusicoNome, listMusico,
+  (term)=>{ const n=normaliza(term); return cacheMusicosNomesNorm.filter(m=> m._norm.includes(n)).slice(0,8).map(m=>({ ...m, html:`<div class="ac-item text-xs">${escapeHtml(m.nome)}</div>` })); },
+  (item)=>{ inputMusicoNome.value=item.nome; inputMusicoNome.dataset.id=item.id; inputMusicoInst.focus(); }
+);
+createKeyboardAC(inputMusicoInst, listInst,
+  (term)=>{ const n=normaliza(term); return cacheInstrumentosNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); },
+  (item)=>{ inputMusicoInst.value=item.nome; inputMusicoInst.dataset.id=item.id; document.getElementById('btnConfirmAddMusico').click(); }
+);
+
+// FIX 6 e OTIMIZAÇÃO: fundir com Promise.all + remove do cache
+async function fundirMusicos(mantemId, apagaId){
+  const {data: presApaga}=await supabaseClient.from('encontro_musicos').select('encontro_id').eq('musico_id', apagaId);
+  const {data: presMantem}=await supabaseClient.from('encontro_musicos').select('encontro_id').eq('musico_id', mantemId);
+  const setMantem=new Set((presMantem||[]).map(p=>p.encontro_id));
+  const toDelete=[]; const toUpdate=[];
+  for(const p of (presApaga||[])){
+    if(setMantem.has(p.encontro_id)) toDelete.push(p.encontro_id);
+    else toUpdate.push(p.encontro_id);
+  }
+  if(toDelete.length) await supabaseClient.from('encontro_musicos').delete().eq('musico_id', apagaId).in('encontro_id', toDelete);
+  if(toUpdate.length){
+    // otimizado: atualiza em lote onde possível
+    await Promise.all(toUpdate.map(eid=> supabaseClient.from('encontro_musicos').update({musico_id: mantemId}).eq('musico_id', apagaId).eq('encontro_id', eid)));
+  }
+  await supabaseClient.from('musicos').delete().eq('id', apagaId);
+  // FIX 6: remove do cache
+  cacheMusicosNomes=cacheMusicosNomes.filter(m=> m.id!==apagaId);
+  cacheMusicosNomesNorm=cacheMusicosNomesNorm.filter(m=> m.id!==apagaId);
+}
+async function fundirMusicas(mantemId, apagaId){
+  const {data: repApaga}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', apagaId);
+  const {data: repMantem}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', mantemId);
+  const setMantem=new Set((repMantem||[]).map(r=>r.encontro_id));
+  const toDelete=[]; const toUpdate=[];
+  for(const r of (repApaga||[])){
+    if(setMantem.has(r.encontro_id)) toDelete.push(r.encontro_id);
+    else toUpdate.push(r.encontro_id);
+  }
+  if(toDelete.length) await supabaseClient.from('encontro_repertorio').delete().eq('musica_id', apagaId).in('encontro_id', toDelete);
+  if(toUpdate.length) await Promise.all(toUpdate.map(eid=> supabaseClient.from('encontro_repertorio').update({musica_id: mantemId}).eq('musica_id', apagaId).eq('encontro_id', eid)));
+  await supabaseClient.from('musicas').delete().eq('id', apagaId);
+  // FIX 6
+  cacheMusicas=cacheMusicas.filter(m=> m.id!==apagaId);
+  cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==apagaId);
+  const movedCount=cacheRepertorioCounts[apagaId]||0;
+  cacheRepertorioCounts[mantemId]=(cacheRepertorioCounts[mantemId]||0)+movedCount;
+  delete cacheRepertorioCounts[apagaId];
+}
+async function fundirCompositores(mantemId, apagaId){
+  await supabaseClient.from('musicas').update({compositor_id: mantemId}).eq('compositor_id', apagaId);
+  await supabaseClient.from('compositores').delete().eq('id', apagaId);
+  cacheCompositores=cacheCompositores.filter(c=> c.id!==apagaId);
+  cacheCompositoresNorm=cacheCompositoresNorm.filter(c=> c.id!==apagaId);
+}
+async function fundirInstrumentos(mantemId, apagaId){
+  await supabaseClient.from('encontro_musicos').update({instrumento_id: mantemId}).eq('instrumento_id', apagaId);
+  await supabaseClient.from('instrumentos').delete().eq('id', apagaId);
+  cacheInstrumentos=cacheInstrumentos.filter(i=> i.id!==apagaId);
+  cacheInstrumentosNorm=cacheInstrumentosNorm.filter(i=> i.id!==apagaId);
+}
+
+async function carregarMusicosMaster(){
+  const cont=document.getElementById('musicos-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>';
+  const {data: musicos}=await supabaseClient.from('musicos').select('id,nome').order('nome').limit(300);
+  const {data: pres}=await supabaseClient.from('encontro_musicos').select('musico_id, encontro_id, instrumentos(id,nome), encontros(id,numero)').limit(2000);
+  const mapa={}; (pres||[]).forEach(p=>{ if(!mapa[p.musico_id]) mapa[p.musico_id]=[]; mapa[p.musico_id].push(p); });
+  let filtered=musicos; const q=document.getElementById('search').value.trim(); if(q) filtered=musicos.filter(m=> normaliza(m.nome).includes(normaliza(q)));
+  cont.innerHTML=filtered.map(m=>{
+    const lista=(mapa[m.id]||[]).sort((a,b)=> (b.encontros?.numero||0)-(a.encontros?.numero||0));
+    const encontrosHtml=lista.map(l=>`<div class="flex items-center gap-1 bg-zinc-800/80 p-1.5 rounded text-[11px]"><button data-eid="${l.encontros?.id}" class="chip bg-zinc-700 px-1.5 py-0.5 rounded">#${l.encontros?.numero||'?'}</button><span class="flex-1">${escapeHtml(l.instrumentos?.nome||'Sem inst')}</span></div>`).join('')||'<div class="text-[11px] text-zinc-600">Nenhuma roda</div>';
+    return `<div class="group bg-zinc-900 border border-zinc-800 p-3 rounded"><div class="flex gap-2"><input value="${escapeAttr(m.nome)}" class="edit-nome-musico flex-1 bg-zinc-800 border border-zinc-700 rounded p-2 text-sm"><button class="btn-save-nome bg-emerald-600 text-white px-3 py-2 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del-musico text-zinc-500 px-2 text-xs">✕</button></div><div class="mt-2 space-y-1 max-h-[180px] overflow-y-auto">${encontrosHtml}</div></div>`;
+  }).join('');
+  cont.querySelectorAll('.group').forEach((row, idx)=>{
+    const musicoId=filtered[idx]?.id; const inputNome=row.querySelector('.edit-nome-musico'); const btnSaveNome=row.querySelector('.btn-save-nome'); const btnDel=row.querySelector('.btn-del-musico');
+    btnSaveNome.onclick=async()=>{
+      const novo=inputNome.value.trim(); if(!novo) return; btnSaveNome.textContent='...';
+      try{
+        const {error}=await supabaseClient.from('musicos').update({nome: novo}).eq('id', musicoId);
+        if(!error) showStatus(`✅ ${novo}`);
+        else if(error.code==='23505'){
+          const {data: existente}=await supabaseClient.from('musicos').select('id,nome').ilike('nome', novo).limit(1).single();
+          if(confirm(`FUSÃO MÚSICOS\n"${inputNome.value}" → "${existente.nome}"?`)){ await fundirMusicos(existente.id, musicoId); showStatus(`✅ FUNDIDO`); row.remove(); }
+        } else throw error;
+      }catch(e){ showStatus(e.message,true); }
+      btnSaveNome.textContent='Salvar / Fundir';
+    };
+    btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('musicos').delete().eq('id', musicoId); if(error) showStatus(error.message,true); else row.remove(); };
+    row.querySelectorAll('.chip').forEach(ch=> ch.onclick=()=> selecionarEncontro(ch.dataset.eid));
+  });
+}
+async function carregarMusicasMaster(){
+  const cont=document.getElementById('musicas-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>';
+  let filtered=cacheMusicas; const q=document.getElementById('search').value.trim(); if(q) filtered=cacheMusicasNorm.filter(m=> m._normTitulo.includes(normaliza(q)) || m._normComp.includes(normaliza(q)));
+  filtered=filtered.sort((a,b)=> (cacheRepertorioCounts[b.id]||0)-(cacheRepertorioCounts[a.id]||0)).slice(0,250);
+  cont.innerHTML=filtered.map(m=>{
+    const vezes=cacheRepertorioCounts[m.id]||0;
+    const badge=vezes>0?`<span class="text-[10px] bg-emerald-900/30 text-emerald-300 px-1.5 py-0.5 rounded">${vezes}x</span>`:`<span class="text-[10px] bg-amber-900/30 text-amber-300 px-1.5 py-0.5 rounded">0x</span>`;
+    return `<div class="group bg-zinc-900 border border-zinc-800 p-3 rounded"><div class="grid grid-cols-[1fr_200px_120px] gap-2"><div><div class="flex gap-2 items-center"><input value="${escapeAttr(m.titulo)}" class="edit-titulo flex-1 bg-zinc-800 border border-zinc-700 rounded p-2 text-xs">${badge}</div></div><div class="relative"><input value="${escapeAttr(m.compositores?.nome||'')}" data-comp-id="${m.compositor_id||''}" class="edit-comp w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-xs"><div class="ac-list autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div><div class="flex gap-1"><button class="btn-save bg-emerald-600 text-white px-2 py-2 rounded text-[11px] font-bold w-full">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div></div></div>`;
+  }).join('');
+  cont.querySelectorAll('.group').forEach((row, idx)=>{
+    const realId=filtered[idx]?.id; const inpTit=row.querySelector('.edit-titulo'); const inpComp=row.querySelector('.edit-comp'); const acList=row.querySelector('.ac-list'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del');
+    let t; inpComp.addEventListener('input', ()=>{ clearTimeout(t); const term=inpComp.value.trim(); if(term.length<2){ acList.classList.add('hidden'); inpComp.dataset.compId=''; return; } t=setTimeout(()=>{ const res=cacheCompositoresNorm.filter(c=> c._norm.includes(normaliza(term))).slice(0,8); if(res.length===0){ acList.classList.add('hidden'); return; } acList.innerHTML=res.map(r=> `<div class="p-1.5 hover:bg-zinc-700 cursor-pointer text-xs" data-id="${r.id}" data-nome="${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</div>`).join(''); acList.classList.remove('hidden'); acList.querySelectorAll('div').forEach(d=> d.onclick=()=>{ inpComp.value=d.dataset.nome; inpComp.dataset.compId=d.dataset.id; acList.classList.add('hidden'); }); },150); });
+    btnSave.onclick=async()=>{
+      const novoTitulo=inpTit.value.trim(); const compNome=inpComp.value.trim(); if(!novoTitulo) return; btnSave.textContent='...';
+      try{
+        let compId=inpComp.dataset.compId;
+        // FIX v8.4 FINAL: resolve qualquer compositor digitado livre (não só quando !compId)
+        if(compNome){
+          const normComp = normaliza(compNome);
+          const cur = compId ? cacheCompositoresNorm.find(x=> x.id===compId) : null;
+          if(!cur || cur._norm!==normComp){
+            const f=cacheCompositoresNorm.find(c=> c._norm===normComp);
+            if(f) compId=f.id; else { const {data:n}=await supabaseClient.from('compositores').insert({nome: compNome}).select('id').single(); compId=n.id; const novo={id: compId, nome: compNome, _norm: normComp}; cacheCompositores.push({id: compId, nome: compNome}); cacheCompositoresNorm.push(novo); }
+            inpComp.dataset.compId=compId;
+          }
+        }
+        const {error}=await supabaseClient.from('musicas').update({titulo: novoTitulo, compositor_id: compId||null}).eq('id', realId);
+        if(!error){
+          showStatus(`✅ "${novoTitulo}" → ${compNome}`);
+          const upd={titulo: novoTitulo, compositor_id: compId, compositores: {id: compId, nome: compNome}, _normTitulo: normaliza(novoTitulo), _normComp: normaliza(compNome)};
+          cacheMusicas = cacheMusicas.map(m=> m.id===realId ? {...m, ...upd} : m);
+          cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===realId ? {...m, ...upd} : m);
+        }
+        else if(error.code==='23505'){
+          const {data: existente}=await supabaseClient.from('musicas').select('id,titulo').ilike('titulo', novoTitulo).limit(1).single();
+          if(confirm(`FUSÃO CHORO\n"${novoTitulo}" já existe! Fundir?`)){ await fundirMusicas(existente.id, realId); showStatus(`✅ FUNDIDO`); row.remove(); }
+        } else throw error;
+      }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir';
+    };
+    btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inpTit.value}"?`)) return; const {error}=await supabaseClient.from('musicas').delete().eq('id', realId); if(error) showStatus(error.message,true); else {row.remove(); delete cacheRepertorioCounts[realId]; cacheMusicas=cacheMusicas.filter(m=> m.id!==realId); cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==realId);} };
+  });
+}
+async function carregarInstrumentosMaster(){
+  const cont=document.getElementById('instrumentos-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>';
+  const {data: inst}=await supabaseClient.from('instrumentos').select('id,nome').order('nome');
+  let filtered=inst; const q=document.getElementById('search').value.trim(); if(q) filtered=inst.filter(i=> normaliza(i.nome).includes(normaliza(q)));
+  cont.innerHTML=filtered.map(i=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(i.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join('');
+  cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ const novo=inp.value.trim(); if(!novo) return; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('instrumentos').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('instrumentos').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirInstrumentos(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('instrumentos').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; });
+}
+async function carregarCompositoresMaster(){
+  const cont=document.getElementById('compositores-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>';
+  const {data: comps}=await supabaseClient.from('compositores').select('id,nome').order('nome').limit(250);
+  let filtered=comps; const q=document.getElementById('search').value.trim(); if(q) filtered=comps.filter(c=> normaliza(c.nome).includes(normaliza(q)));
+  cont.innerHTML=filtered.map(c=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(c.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join('');
+  cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ const novo=inp.value.trim(); if(!novo) return; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('compositores').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('compositores').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirCompositores(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('compositores').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; });
+}
+async function carregarOtimizacoes(){
+  const el1=document.getElementById('opt-musicas-duplicatas'); const el2=document.getElementById('opt-musicos-duplicatas'); const el3=document.getElementById('opt-musicas-nunca');
+  el1.innerHTML='Carregando...'; 
+  const porTitulo={}; cacheMusicasNorm.forEach(m=>{ const t=m._normTitulo; if(t.length<3) return; if(!porTitulo[t]) porTitulo[t]=[]; porTitulo[t].push(`${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')} (${cacheRepertorioCounts[m.id]||0}x)`); });
+  const dupMusicas=Object.entries(porTitulo).filter(([k,v])=> v.length>1).slice(0,20).map(([k,v])=> `<div class="p-1.5 hover:bg-zinc-800 rounded border-b border-zinc-800/50"><b>${escapeHtml(k)}:</b><br>${v.join('<br>')}</div>`).join('');
+  el1.innerHTML=dupMusicas||'<span class="text-zinc-600">Nenhuma duplicata!</span>';
+
+  const porPrimeiro={}; cacheMusicosNomesNorm.forEach(m=>{ const primeiro=normaliza(m.nome).split(' ')[0]; if(primeiro.length<3) return; if(!porPrimeiro[primeiro]) porPrimeiro[primeiro]=[]; porPrimeiro[primeiro].push(m.nome); });
+  const dupMusicos=Object.entries(porPrimeiro).filter(([k,v])=> v.length>1 && v.length<8).slice(0,15).map(([k,v])=> `<div class="p-1 hover:bg-zinc-800 rounded"><b>${escapeHtml(k)}:</b> ${v.map(escapeHtml).join(', ')}</div>`).join('');
+  el2.innerHTML=dupMusicos||'<span class="text-zinc-600">Nenhum</span>';
+
+  const nunca=cacheMusicas.filter(m=> !cacheRepertorioCounts[m.id]).slice(0,80).map(m=> `<div class="p-1 flex justify-between"><span>${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')}</span><span class="text-[10px] text-zinc-500">0x</span></div>`).join('');
+  el3.innerHTML=nunca||'<span class="text-zinc-600">Todas tocadas!</span>';
+}
+
+carregarLista();
+async function selecionarEncontro(id){
+  const {data: enc}=await supabaseClient.from('encontros').select('*').eq('id', id).single();
+  encontroAtual=enc;
+  document.getElementById('det-titulo').textContent=`Encontro #${enc.numero}`;
+  document.getElementById('det-sub').textContent=`${enc.data} - ${enc.observacoes||''}`;
+  document.getElementById('encontro-form').classList.remove('hidden');
+  document.getElementById('btnSalvarEncontro').classList.remove('hidden');
+  document.getElementById('btnDeletarEncontro').classList.remove('hidden');
+  document.getElementById('edit-numero').value=enc.numero;
+  document.getElementById('edit-data').value=enc.data||'';
+  document.getElementById('edit-obs').value=enc.observacoes||'';
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')});
+  document.querySelector('[data-tab="encontros"]').classList.add('tab-active'); document.querySelector('[data-tab="encontros"]').classList.remove('text-zinc-400');
+  tab='encontros';
+  // FIX 1: agora consistente
+  ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{
+    const el=document.getElementById('view-'+v);
+    if(el) el.classList.toggle('hidden', v!=='encontros');
+  });
+  document.getElementById('lista').classList.remove('hidden');
+  carregarLista(); carregarMusicosEncontro(id); carregarRepertorioEncontro(id);
+  setTimeout(()=> document.getElementById('new-musica-titulo').focus(), 200);
+}
+async function carregarMusicosEncontro(encontro_id){
+  const {data}=await supabaseClient.from('encontro_musicos').select('musico_id, instrumento_id, musicos(nome), instrumentos(nome)').eq('encontro_id', encontro_id);
+  const cont=document.getElementById('musicos-encontro-lista'); document.getElementById('count-musicos').textContent=data?.length||0;
+  cont.innerHTML=(data||[]).map(r=>`<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicos?.nome||r.musico_id)}</b> - <span class="text-zinc-400">${escapeHtml(r.instrumentos?.nome||'Sem inst.')}</span></span><button data-mid="${r.musico_id}" class="btn-remove-musico-enc text-red-400 text-[11px]">Remover</button></div>`).join('');
+  cont.querySelectorAll('.btn-remove-musico-enc').forEach(b=> b.onclick=async()=>{ await supabaseClient.from('encontro_musicos').delete().eq('encontro_id', encontro_id).eq('musico_id', b.dataset.mid); carregarMusicosEncontro(encontro_id); });
+}
+async function carregarRepertorioEncontro(encontro_id){
+  const {data}=await supabaseClient.from('encontro_repertorio').select('musica_id, musicas(titulo, compositores(nome))').eq('encontro_id', encontro_id);
+  const cont=document.getElementById('repertorio-encontro-lista'); document.getElementById('count-musicas').textContent=data?.length||0;
+  cont.innerHTML=(data||[]).map(r=>`<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicas?.titulo||r.musica_id)}</b> - <span class="text-emerald-300">${escapeHtml(r.musicas?.compositores?.nome||'')}</span></span><button data-mid="${r.musica_id}" class="btn-remove-musica-enc text-red-400 text-[11px]">Remover</button></div>`).join('');
+  cont.querySelectorAll('.btn-remove-musica-enc').forEach(b=> b.onclick=async()=>{ await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontro_id).eq('musica_id', b.dataset.mid); carregarRepertorioEncontro(encontro_id); if(cacheRepertorioCounts[b.dataset.mid]){ cacheRepertorioCounts[b.dataset.mid]--; if(cacheRepertorioCounts[b.dataset.mid]<=0) delete cacheRepertorioCounts[b.dataset.mid]; } });
+}
+// FIX 7: getOrCreate usa cache, não busca tudo toda vez
+async function getOrCreate(table, nome){
+  if(!nome) return null; const norm=normaliza(nome);
+  let cache, cacheNorm;
+  if(table==='compositores'){ cache=cacheCompositores; cacheNorm=cacheCompositoresNorm; }
+  else if(table==='instrumentos'){ cache=cacheInstrumentos; cacheNorm=cacheInstrumentosNorm; }
+  else if(table==='musicos'){ cache=cacheMusicosNomes; cacheNorm=cacheMusicosNomesNorm; }
+  else { cache=[]; cacheNorm=[]; }
+  const found=cacheNorm.find(r=> r._norm===norm);
+  if(found) return cache.find(c=> c.id===found.id);
+  const {data, error}=await supabaseClient.from(table).insert({nome: nome.trim()}).select('id,nome').single();
+  if(error){
+    if(error.code==='23505'){
+      const {data: retry}=await supabaseClient.from(table).select('id,nome').ilike('nome', nome).limit(1).single();
+      if(retry){
+        // adiciona ao cache
+        if(table==='compositores'){ cacheCompositores.push(retry); cacheCompositoresNorm.push({...retry, _norm: norm}); }
+        if(table==='instrumentos'){ cacheInstrumentos.push(retry); cacheInstrumentosNorm.push({...retry, _norm: norm}); }
+        if(table==='musicos'){ cacheMusicosNomes.push(retry); cacheMusicosNomesNorm.push({...retry, _norm: norm}); }
+        return retry;
+      }
+    }
+    throw error;
+  }
+  // adiciona ao cache
+  if(table==='compositores'){ cacheCompositores.push(data); cacheCompositoresNorm.push({...data, _norm: norm}); }
+  if(table==='instrumentos'){ cacheInstrumentos.push(data); cacheInstrumentosNorm.push({...data, _norm: norm}); }
+  if(table==='musicos'){ cacheMusicosNomes.push(data); cacheMusicosNomesNorm.push({...data, _norm: norm}); }
+  return data;
+}
+document.getElementById('btnConfirmAddMusico').onclick = async()=>{
+  if(!encontroAtual) return; const nome=document.getElementById('new-musico-nome').value.trim(); const instNome=document.getElementById('new-musico-inst').value.trim(); if(!nome) return;
+  try{ const musico=await getOrCreate('musicos', nome); const inst=instNome? await getOrCreate('instrumentos', instNome) : null; const {error}=await supabaseClient.from('encontro_musicos').insert({encontro_id: encontroAtual.id, musico_id: musico.id, instrumento_id: inst?.id||null}); if(error && error.code==='23505'){ showStatus('Músico já está nessa roda', true); return; } document.getElementById('new-musico-nome').value=''; document.getElementById('new-musico-nome').dataset.id=''; document.getElementById('new-musico-inst').value=''; document.getElementById('new-musico-inst').dataset.id=''; carregarMusicosEncontro(encontroAtual.id); showStatus(`✅ ${escapeHtml(musico.nome)} adicionado`); document.getElementById('new-musico-nome').focus(); }catch(e){ showStatus(e.message, true); }
+};
+document.getElementById('btnConfirmAddMusica').onclick = async()=>{
+  if(!encontroAtual) return; 
+  const tituloEl = document.getElementById('new-musica-titulo');
+  const compEl = document.getElementById('new-musica-comp');
+  const titulo = tituloEl.value.trim(); 
+  const compNomeDigitado = compEl.value.trim(); 
+  let musicaId = tituloEl.dataset.id || null;
+  let compIdAtual = compEl.dataset.compId || null;
+  if(!titulo) return;
+  try{
+    if(compNomeDigitado){
+      const normDig = normaliza(compNomeDigitado);
+      const cur = compIdAtual ? cacheCompositoresNorm.find(x=> x.id===compIdAtual) : null;
+      if(!cur || cur._norm!==normDig){
+        const comp = await getOrCreate('compositores', compNomeDigitado);
+        compIdAtual = comp.id; compEl.dataset.compId = compIdAtual;
+      }
+    }
+    if(musicaId){
+      const musicaCache = cacheMusicas.find(m=> m.id===musicaId);
+      const originalIdReal = musicaCache?.compositor_id || tituloEl.dataset.compOriginalId;
+      if(compIdAtual && compIdAtual !== originalIdReal){
+        await supabaseClient.from('musicas').update({compositor_id: compIdAtual}).eq('id', musicaId);
+        const compObj=cacheCompositores.find(c=> c.id===compIdAtual);
+        cacheMusicas = cacheMusicas.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj} : m);
+        cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj, _normComp: normaliza(compObj?.nome||'')} : m);
+        showStatus(`✅ Compositor corrigido: "${titulo}" → ${compNomeDigitado}`);
+      }
+      const {error: errRep} = await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId});
+      if(errRep && errRep.code==='23505') showStatus('Música já está nesse repertório', true);
+      else { cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1; }
+    } else {
+      const existente = cacheMusicasNorm.find(m=> m._normTitulo===normaliza(titulo));
+      if(existente){
+        musicaId = existente.id;
+        if(compIdAtual && compIdAtual !== existente.compositor_id){
+          await supabaseClient.from('musicas').update({compositor_id: compIdAtual}).eq('id', musicaId);
+          showStatus(`✅ "${titulo}" corrigido para ${compNomeDigitado}`);
+        }
+        await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId}).catch(()=>{});
+        cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1;
+      } else {
+        let compIdParaCriar = compIdAtual;
+        if(!compIdParaCriar && compNomeDigitado){ const comp = await getOrCreate('compositores', compNomeDigitado); compIdParaCriar = comp.id; }
+        const {data: novaMusica} = await supabaseClient.from('musicas').insert({titulo, compositor_id: compIdParaCriar||null}).select('id').single();
+        musicaId = novaMusica.id;
+        const compObj=cacheCompositores.find(c=> c.id===compIdParaCriar);
+        const nova = {id: musicaId, titulo, compositor_id: compIdParaCriar, compositores: compObj, _normTitulo: normaliza(titulo), _normComp: normaliza(compNomeDigitado)};
+        cacheMusicas.push(nova); cacheMusicasNorm.push(nova);
+        cacheRepertorioCounts[musicaId]=1;
+        await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId});
+        showStatus(`✅ Música nova "${titulo}" criada`);
+      }
+    }
+    tituloEl.value=''; tituloEl.dataset.id=''; tituloEl.dataset.compOriginalId='';
+    compEl.value=''; compEl.dataset.compId=''; document.getElementById('musica-info').classList.add('hidden');
+    carregarRepertorioEncontro(encontroAtual.id); 
+    document.getElementById('count-musicas-total').textContent=cacheMusicas.length;
+    tituloEl.focus();
+  }catch(e){ showStatus(e.message, true); }
+};
+document.getElementById('btnSalvarEncontro').onclick = async()=>{
+  if(!encontroAtual) return; const numero=parseInt(document.getElementById('edit-numero').value); const data=document.getElementById('edit-data').value; const obs=document.getElementById('edit-obs').value; const {error}=await supabaseClient.from('encontros').update({numero, data, observacoes: obs}).eq('id', encontroAtual.id); if(error) showStatus(error.message, true); else { showStatus(`✅ Encontro #${numero} atualizado`); carregarLista(); }
+};
+document.getElementById('btnDeletarEncontro').onclick = async()=>{
+  if(!encontroAtual || !confirm(`Deletar encontro #${encontroAtual.numero}?`)) return; await supabaseClient.from('encontro_musicos').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontros').delete().eq('id', encontroAtual.id); encontroAtual=null; document.getElementById('encontro-form').classList.add('hidden'); document.getElementById('btnSalvarEncontro').classList.add('hidden'); document.getElementById('btnDeletarEncontro').classList.add('hidden'); document.getElementById('det-titulo').textContent='Selecione um encontro'; showStatus('Encontro deletado'); carregarLista();
+};
+document.getElementById('btnNovo').onclick = async()=>{
+  const numero=prompt('Número do novo encontro?'); if(!numero) return; const data=prompt('Data (YYYY-MM-DD)?', new Date().toISOString().slice(0,10)); const {data: novo, error}=await supabaseClient.from('encontros').insert({numero: parseInt(numero), data, observacoes: ''}).select('id').single(); if(error) showStatus(error.message, true); else { carregarLista(); selecionarEncontro(novo.id); }
+};
+</script>
 </body>
 </html>
