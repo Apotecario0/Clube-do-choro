@@ -6,6 +6,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+*{-webkit-tap-highlight-color:transparent}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 .autocomplete-list{max-height:240px;overflow-y:auto;z-index:50}
 .tab-active{background:#27272a;border-color:#3f3f46;color:white !important}
 .chip{cursor:pointer;transition:all .15s}
@@ -13,601 +15,283 @@
 .ac-item{padding:7px 10px;cursor:pointer;border-bottom:1px solid #27272a}
 .ac-item:hover, .ac-item.active{background:#27272a}
 .ac-item.active{border-left:3px solid #10b981;background:#1f1f23}
+.pesq-row{cursor:pointer}
+.pesq-row:hover{background:#27272a}
+.pesq-row.active{background:#1f1f23;border-left:3px solid #10b981}
+.subtab-active{background:#27272a !important;border-color:#f59e0b !important;color:#fde68a !important}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:999px}
+::-webkit-scrollbar-track{background:transparent}
+input,select{outline:none}
+.layout-main{scroll-behavior:smooth}
+.card{border-radius:16px}
+.encontro-item{max-width:100%;overflow:hidden;min-width:0}
+.encontro-obs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}
+#lista{overflow-x:hidden}
+.top-tabs::-webkit-scrollbar{height:4px}
+.top-tabs{scrollbar-width:thin}
 </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100">
-<div class="flex h-screen">
-  <div class="w-[360px] bg-zinc-900 border-r border-zinc-800 flex flex-col">
-    <div class="p-4 border-b border-zinc-800">
-      <h1 class="font-bold flex justify-between">Brasileirinho v8.4 FINAL <span class="text-[10px] bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded">v8.1 + FIX ANY COMP</span></h1>
-      <p class="text-xs text-zinc-400 mt-1">Mantido v8.1 completo (Encontros/Musicos/Musicas/Comp/Inst/Otimizacao) + fix: qualquer compositor digitado livre agora funciona</p>
-      <div class="grid grid-cols-3 gap-1 mt-3">
-        <!-- FIX 1: tab nomes consistentes (antes: encontros vs encontro) -->
-        <button data-tab="encontros" class="tab-btn tab-active text-[11px] px-2 py-2 rounded border border-zinc-700">Encontros</button>
-        <button data-tab="musicos" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Músicos</button>
-        <button data-tab="musicas" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Músicas</button>
-        <button data-tab="compositores" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Comp</button>
-        <button data-tab="instrumentos" class="tab-btn text-[11px] px-2 py-2 rounded border border-zinc-800 text-zinc-400">Inst</button>
-        <button data-tab="otimizacoes" class="tab-btn text-[11px] px-2 py-2 rounded border border-amber-800/50 text-amber-400">⚡ Otimização</button>
+<div class="flex flex-col h-screen overflow-hidden">
+  <header class="flex items-center gap-2 px-3 py-2 bg-zinc-900 border-b border-zinc-800 shrink-0">
+    <button id="btnToggleSidebar" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2.5 py-2 rounded-lg text- font-bold whitespace-nowrap shrink-0">◀ Esconder lista</button>
+    <div class="shrink-0 hidden md:block">
+      <h1 class="font-bold text- leading-none whitespace-nowrap">Brasileirinho <span class="text- bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded">v8.4 FINAL</span></h1>
+      <p class="text- text-zinc-500 leading-tight mt-0.5 hidden lg:block">v8.1 + fix compositor livre</p>
+    </div>
+    <nav class="top-tabs flex gap-1.5 overflow-x-auto flex-1 min-w-0 whitespace-nowrap py-0.5">
+      <button data-tab="encontros" class="tab-btn tab-active text- px-3 py-2 rounded-lg border border-zinc-700 whitespace-nowrap shrink-0">Encontros</button>
+      <button data-tab="musicos" class="tab-btn text- px-3 py-2 rounded-lg border border-zinc-800 text-zinc-400 whitespace-nowrap shrink-0">Músicos</button>
+      <button data-tab="musicas" class="tab-btn text- px-3 py-2 rounded-lg border border-zinc-800 text-zinc-400 whitespace-nowrap shrink-0">Músicas</button>
+      <button data-tab="compositores" class="tab-btn text- px-3 py-2 rounded-lg border border-zinc-800 text-zinc-400 whitespace-nowrap shrink-0">Comp</button>
+      <button data-tab="instrumentos" class="tab-btn text- px-3 py-2 rounded-lg border border-zinc-800 text-zinc-400 whitespace-nowrap shrink-0">Inst</button>
+      <button data-tab="otimizacoes" class="tab-btn text- px-3 py-2 rounded-lg border border-amber-800/50 text-amber-400 whitespace-nowrap shrink-0">⚡ Otimização</button>
+    </nav>
+    <button id="btnNovo" class="bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 rounded-lg text-xs font-bold shrink-0">+ Novo</button>
+  </header>
+  <div class="flex flex-1 overflow-hidden min-h-0">
+  <aside id="sidebar" class="w- shrink-0 bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden">
+    <div class="p-3 pb-3 border-b border-zinc-800 shrink-0">
+      <div class="flex gap-2">
+        <input id="search" placeholder="Buscar (Ctrl+K)..." class="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-xs focus:border-emerald-600 outline-none">
       </div>
-      <div class="mt-3 flex gap-2">
-        <input id="search" placeholder="Buscar (Ctrl+K)..." class="flex-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs focus:border-emerald-600 outline-none">
-        <button id="btnNovo" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded text-xs font-bold">+ Novo</button>
+      <div class="mt-2 flex gap-1.5">
+        <button id="btnRecarregarCache" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-2 py-2 text-">🔄 Recarregar tudo</button>
+        <button id="btnExport" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-2 py-2 text-">📤 CSV</button>
       </div>
-      <div class="mt-2 flex gap-1">
-        <button id="btnRecarregarCache" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded px-2 py-1.5 text-[11px]">🔄 Recarregar tudo</button>
-        <button id="btnExport" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded px-2 py-1.5 text-[11px]">📤 CSV</button>
-      </div>
-      <div id="cache-info" class="mt-2 text-[10px] text-zinc-500 leading-tight"></div>
+      <div id="cache-info" class="mt-2 text- text-zinc-500 leading-tight"></div>
     </div>
     <div id="lista" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
-    <div class="p-3 border-t border-zinc-800 text-[11px] text-zinc-500"><div id="stats">Carregando...</div></div>
-  </div>
-
-  <div class="flex-1 overflow-y-auto p-5">
-    <!-- FIX 1: id consistente view-encontros (plural) -->
-    <div id="view-encontros" class="max-w-5xl">
-      <div class="flex justify-between items-start mb-4">
-        <div><h2 class="text-xl font-bold" id="det-titulo">Selecione um encontro</h2><p class="text-zinc-400 text-xs" id="det-sub"></p></div>
-        <div class="flex gap-2"><button id="btnSalvarEncontro" class="bg-emerald-600 px-3 py-2 rounded font-bold text-xs hidden">Salvar</button><button id="btnDeletarEncontro" class="bg-zinc-800 px-3 py-2 rounded text-xs hidden">Deletar</button></div>
+    <div class="p-3 border-t border-zinc-800 text- text-zinc-500 shrink-0"><div id="stats">Carregando...</div></div>
+  </aside>
+  <div class="flex-1 overflow-y-auto p-6 layout-main min-w-0">
+    <div class="max-w- mx-auto">
+    <div id="view-encontros" class="max-w-none">
+      <div class="flex justify-between items-start gap-4 mb-4">
+        <div class="min-w-0"><h2 class="text-xl font-bold truncate" id="det-titulo">Selecione um encontro</h2><p class="text-zinc-400 text-xs mt-0.5" id="det-sub"></p></div>
+        <div class="flex gap-2 shrink-0"><button id="btnSalvarEncontro" class="bg-emerald-600 px-4 py-2.5 rounded-lg font-bold text-xs hidden">Salvar</button><button id="btnDeletarEncontro" class="bg-zinc-800 px-4 py-2.5 rounded-lg text-xs hidden">Deletar</button></div>
       </div>
       <div id="encontro-form" class="hidden space-y-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 grid grid-cols-3 gap-3">
-          <div><label class="text-[11px] text-zinc-400">Número</label><input id="edit-numero" type="number" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
-          <div><label class="text-[11px] text-zinc-400">Data</label><input id="edit-data" type="date" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
-          <div><label class="text-[11px] text-zinc-400">Obs</label><input id="edit-obs" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mt-1 text-sm"></div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div><label class="text- text-zinc-400">Número</label><input id="edit-numero" type="number" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 mt-1 text-sm"></div>
+          <div><label class="text- text-zinc-400">Data</label><input id="edit-data" type="date" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 mt-1 text-sm"></div>
+          <div><label class="text- text-zinc-400">Obs</label><input id="edit-obs" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2.5 mt-1 text-sm"></div>
         </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-xs">Músicos (<span id="count-musicos">0</span>)</h3></div>
-          <div class="grid grid-cols-[1fr_1fr_auto] gap-2 p-3 bg-zinc-800/70 rounded border border-zinc-700 mb-3">
-            <div class="relative"><input id="new-musico-nome" data-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded p-2.5 text-xs" placeholder="Músico + ↓ + Enter"><div id="ac-musico" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
-            <div class="relative"><input id="new-musico-inst" data-id="" class="w-full bg-zinc-900 border border-zinc-700 rounded p-2.5 text-xs" placeholder="Instrumento"><div id="ac-inst" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
-            <button id="btnConfirmAddMusico" class="bg-emerald-600 px-4 rounded text-xs font-bold h-[36px]">Add</button>
+          <div class="grid grid-cols-[1fr_1fr_90px_auto] gap-2 p-3 bg-zinc-800/70 rounded-xl border border-zinc-700 mb-3">
+            <div class="relative"><input id="new-musico-nome" data-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded-lg p-2.5 text-xs" placeholder="Músico + ↓ + Enter"><div id="ac-musico" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+            <div class="relative"><input id="new-musico-inst" data-id="" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-xs" placeholder="Instrumento"><div id="ac-inst" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+            <input id="new-musico-nasc" type="text" placeholder="DD/MM" maxlength="5" title="Aniversário só dia/mês, sem ano" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-xs text-center">
+            <button id="btnConfirmAddMusico" class="bg-emerald-600 px-4 rounded-lg text-xs font-bold h-">Add</button>
           </div>
+          <p class="text- text-zinc-500 -mt-2 mb-3">Aniversário é só DD/MM, sem ano — pra comemorar. Pode deixar em branco e preencher depois na aba Músicos.</p>
           <div id="musicos-encontro-lista" class="space-y-1"></div>
         </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 ring-1 ring-emerald-900/20">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 ring-1 ring-emerald-900/20">
           <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-xs text-emerald-300">Repertório (<span id="count-musicas">0</span>) | Banco: <span id="count-musicas-total">?</span></h3></div>
-          <div class="p-3 bg-zinc-800/70 rounded border border-emerald-800/30 mb-3">
+          <div class="p-3 bg-zinc-800/70 rounded-xl border border-emerald-800/30 mb-3">
             <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
-              <div class="relative"><input id="new-musica-titulo" data-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded p-2.5 text-xs" placeholder="Música"><div id="ac-musica" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
-              <div class="relative"><input id="new-musica-comp" data-comp-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-amber-500/40 rounded p-2.5 text-xs" placeholder="Compositor"><div id="ac-comp" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
-              <button id="btnConfirmAddMusica" class="bg-emerald-600 px-4 rounded text-xs font-bold h-[36px]">Add na roda</button>
+              <div class="relative"><input id="new-musica-titulo" data-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-zinc-600 rounded-lg p-2.5 text-xs" placeholder="Música"><div id="ac-musica" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+              <div class="relative"><input id="new-musica-comp" data-comp-id="" data-comp-original-id="" class="w-full bg-zinc-900 border border-amber-500/40 rounded-lg p-2.5 text-xs" placeholder="Compositor"><div id="ac-comp" class="autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div>
+              <button id="btnConfirmAddMusica" class="bg-emerald-600 px-4 rounded-lg text-xs font-bold h-">Add na roda</button>
             </div>
-            <div id="musica-info" class="mt-2 text-[11px] text-zinc-400 hidden p-2 bg-zinc-900 rounded border"></div>
+            <div id="musica-info" class="mt-2 text- text-zinc-400 hidden p-2 bg-zinc-900 rounded-lg border"></div>
           </div>
           <div id="repertorio-encontro-lista" class="space-y-1"></div>
         </div>
+        </div>
       </div>
     </div>
-
-    <div id="view-musicos" class="hidden max-w-6xl"><h2 class="text-lg font-bold mb-3">Músicos - Salvar / Fundir</h2><div id="musicos-master-lista" class="space-y-3"></div></div>
-    <div id="view-musicas" class="hidden max-w-6xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Músicas - contagem corrigida</h2><span id="musicas-total-info" class="text-[11px] text-zinc-400"></span></div><div id="musicas-master-lista" class="space-y-2"></div></div>
+    <div id="view-musicos" class="hidden max-w-6xl"><div class="flex justify-between items-center mb-3 gap-2 flex-wrap"><h2 class="text-lg font-bold">Músicos - Salvar / Fundir / Aniversário</h2><div class="flex gap-1.5 items-center"><button id="btnMusicosExpandir" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2.5 py-1.5 rounded-lg text- font-bold">▼ Expandir tudo</button><button id="btnMusicosRecolher" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2.5 py-1.5 rounded-lg text- font-bold">▲ Recolher tudo</button></div></div><p class="text- text-zinc-400 mb-3"></p><div id="musicos-master-lista" class="space-y-1"></div></div>
+    <div id="view-musicas" class="hidden max-w-6xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Músicas - contagem corrigida</h2><span id="musicas-total-info" class="text- text-zinc-400"></span></div><div id="musicas-master-lista" class="space-y-2"></div></div>
     <div id="view-compositores" class="hidden max-w-4xl"><h2 class="text-lg font-bold mb-3">Compositores</h2><div id="compositores-master-lista" class="space-y-2"></div></div>
     <div id="view-instrumentos" class="hidden max-w-4xl"><h2 class="text-lg font-bold mb-3">Instrumentos</h2><div id="instrumentos-master-lista" class="space-y-2"></div></div>
-    <div id="view-otimizacoes" class="hidden max-w-5xl">
-      <h2 class="text-lg font-bold mb-3 text-amber-400">⚡ Otimização - v8.1 corrigido</h2>
-      <div id="fixes-list" class="grid grid-cols-2 gap-3 mb-4 text-[11px]"></div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-zinc-900 border border-amber-900/30 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicas duplicadas</h3><div id="opt-musicas-duplicatas" class="text-xs space-y-1 max-h-[250px] overflow-y-auto"></div></div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicos mesmo 1º nome</h3><div id="opt-musicos-duplicatas" class="text-xs space-y-1 max-h-[250px] overflow-y-auto"></div></div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Músicas novas (0x)</h3><div id="opt-musicas-nunca" class="text-xs space-y-1 max-h-[300px] overflow-y-auto"></div></div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded p-4"><h3 class="font-bold text-sm mb-2">Performance</h3><div id="opt-performance" class="text-xs"></div><div id="opt-contagem" class="text-xs mt-2"></div></div>
+    <div id="view-otimizacoes" class="hidden max-w-none">
+      <div class="flex justify-between items-start gap-4 mb-3">
+        <div><h2 class="text-lg font-bold text-amber-400">⚡ Otimização — Pesquisa</h2><p class="text- text-zinc-400 mt-1">Ferramenta de pesquisa dos dados. A limpeza antiga continua em <b class="text-zinc-200">Limpeza</b> abaixo.</p></div>
+        <span id="pesq-status" class="text- text-zinc-400 shrink-0"></span>
+      </div>
+      <div class="flex gap-2 mb-4 sticky top-0 z-10 bg-zinc-950 py-2">
+        <button id="sub-btn-pesquisa" class="subtab-active flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-700 bg-zinc-800">🔍 Pesquisa</button>
+        <button id="sub-btn-limpeza" class="flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-800 text-zinc-400">🧹 Limpeza</button>
+      </div>
+      <div id="otim-pesquisa" class="space-y-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-[1fr_180px_160px_auto] gap-2">
+            <input id="pesq-busca" placeholder="Buscar músico, choro, compositor ou instrumento..." class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-xs focus:border-emerald-600 outline-none">
+            <select id="pesq-instrumento" class="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2.5 text-xs outline-none"><option value="">Todos instrumentos</option></select>
+            <select id="pesq-ordenar" class="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2.5 text-xs outline-none"><option value="vezes">Mais vezes primeiro</option><option value="az">A-Z</option><option value="recente">Mais recente</option><option value="sumiu">Quem sumiu</option></select>
+            <button id="pesq-limpar" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-3 py-2.5 rounded-lg text-xs font-bold">✕ Limpar</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-3">
+            <button data-pesq-atalho="todos" class="pesq-atalho text- bg-emerald-900/40 border border-emerald-800/50 text-emerald-200 px-3 py-1.5 rounded-full font-bold">Todos</button>
+            <button data-pesq-atalho="sumiu" class="pesq-atalho text- bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-full">Quem sumiu +8 quintas</button>
+            <button data-pesq-atalho="so1" class="pesq-atalho text- bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-full">Veio só 1x</button>
+            <button data-pesq-atalho="top10" class="pesq-atalho text- bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-full">Top 10</button>
+            <button id="pesq-export" class="text- bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-3 py-1.5 rounded-full font-bold ml-auto">⬇ Exportar CSV frequência</button>
+          </div>
+          <p id="pesq-debug" class="text- text-amber-300 mt-2"></p>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><p class="text- text-zinc-500 uppercase font-bold">Total de rodas</p><p id="pesq-card-rodas" class="text-2xl font-black mt-1">—</p><p class="text- text-zinc-500">encontros cadastrados</p></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><p class="text- text-zinc-500 uppercase font-bold">Músicos</p><p id="pesq-card-musicos" class="text-2xl font-black mt-1">—</p><p class="text- text-zinc-500">já tocaram em alguma roda</p></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><p class="text- text-zinc-500 uppercase font-bold">Média / roda</p><p id="pesq-card-media" class="text-2xl font-black mt-1">—</p><p class="text- text-zinc-500">músicos por encontro</p></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><p class="text- text-zinc-500 uppercase font-bold">Mais frequente</p><p id="pesq-card-top" class="text-sm font-black mt-1 leading-tight">—</p><p id="pesq-card-top-sub" class="text- text-zinc-500">—</p></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4 items-start">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+            <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-sm">Frequência de Músicos</h3><span id="pesq-count-freq" class="text- text-zinc-400"></span></div>
+            <div id="pesq-frequencia" class="space-y-1 max-h- overflow-y-auto pr-1"><div class="text-xs text-zinc-500">Abra a aba Otimização para carregar...</div></div>
+          </div>
+          <div class="space-y-4">
+            <div id="pesq-raiox" class="bg-zinc-900 border border-emerald-800/40 rounded-2xl p-4 hidden">
+              <div class="flex justify-between items-start"><h3 class="font-bold text-sm text-emerald-300">Raio-X do Músico</h3><button id="pesq-raiox-fechar" class="text-zinc-500 text-xs">✕</button></div>
+              <div id="pesq-raiox-conteudo" class="mt-3 text-xs space-y-2"></div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">História da Roda</h3><div id="pesq-historia" class="text-xs space-y-1.5 text-zinc-300"></div></div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Quem toca com quem? (Top duplas)</h3><div id="pesq-parceiros" class="text-xs space-y-1.5"></div></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Choros mais tocados</h3><div id="pesq-top-choros" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Choros esquecidos (1x)</h3><div id="pesq-esquecidos" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Compositores — distintos vs execuções</h3><div id="pesq-compositores" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+        </div>
+      </div>
+      <div id="otim-limpeza" class="hidden">
+        <div id="fixes-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-zinc-900 border border-amber-900/30 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Músicas duplicadas</h3><div id="opt-musicas-duplicatas" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Músicos mesmo 1º nome</h3><div id="opt-musicos-duplicatas" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Músicas novas (0x)</h3><div id="opt-musicas-nunca" class="text-xs space-y-1 max-h- overflow-y-auto"></div></div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">Performance</h3><div id="opt-performance" class="text-xs"></div><div id="opt-contagem" class="text-xs mt-2"></div></div>
+        </div>
       </div>
     </div>
     <div id="status" class="mt-4 text-xs p-3 bg-zinc-900 rounded hidden"></div>
+    </div>
+  </div>
   </div>
 </div>
-
 <script>
 const SUPABASE_URL = "https://tligeoszfzifgqxymoyn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Cs4IiSM3v_QE1ihCXaXFkw_0g-WyMf_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ===== FIX 2: escapeHtml para evitar XSS + quebra de HTML =====
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escapeAttr(s){ return escapeHtml(s).replace(/`/g,'&#96;'); }
-
-// ===== OTIMIZAÇÃO 1: normaliza com cache + pré-calculado =====
 const normalizaCache = new Map();
-function normaliza(txt){
-  if(!txt) return "";
-  if(normalizaCache.has(txt)) return normalizaCache.get(txt);
-  const n = txt.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+(de|da|do|dos|das|e|na|no|nas|nos|num|numa|com|sem|para|pra)\s+/gi," ").trim().replace(/\s+/g," ");
-  // FIX 3: limita tamanho do cache para não vazar memória
-  if(normalizaCache.size>5000){ const firstKey=normalizaCache.keys().next().value; normalizaCache.delete(firstKey); }
-  normalizaCache.set(txt, n);
-  return n;
-}
-function showStatus(msg, isError=false){
-  const el=document.getElementById('status'); el.textContent=msg; el.classList.remove('hidden');
-  el.className=`mt-4 text-xs p-3 rounded border ${isError?'bg-red-900/30 text-red-300 border-red-800':'bg-emerald-900/30 text-emerald-300 border-emerald-800'}`;
-  setTimeout(()=> el.classList.add('hidden'), 5000);
-}
+function normaliza(txt){ if(!txt) return ""; if(normalizaCache.has(txt)) return normalizaCache.get(txt); const n = txt.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim().replace(/\s+/g," "); if(normalizaCache.size>5000){ const firstKey=normalizaCache.keys().next().value; normalizaCache.delete(firstKey); } normalizaCache.set(txt, n); return n; }
+function showStatus(msg, isError=false){ const el=document.getElementById('status'); el.textContent=msg; el.classList.remove('hidden'); el.className=`mt-4 text-xs p-3 rounded border ${isError?'bg-red-900/30 text-red-300 border-red-800':'bg-emerald-900/30 text-emerald-300 border-emerald-800'}`; setTimeout(()=> el.classList.add('hidden'), 5000); }
+function normalizarAniversario(v){ if(!v) return ''; let s=String(v).trim().replace(/-/g,'/').replace(/\./g,'/'); if(/^\d{4}$/.test(s)) s=s.slice(0,2)+'/'+s.slice(2); if(/^\d{1,2}\/\d{1,2}$/.test(s)){ const [d,m]=s.split('/').map(Number); if(d>=1 && d<=31 && m>=1 && m<=12){ const teste=new Date(2024, m-1, d); if(teste.getMonth()===m-1 && teste.getDate()===d) return String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0'); } } return ''; }
+function isLeapYear(y){ return (y%4===0 && y%100!==0) || y%400===0; }
+function diasParaAniversario(ddmm){ const n=normalizarAniversario(ddmm); if(!n) return null; const [d,m]=n.split('/').map(Number); const hoje=new Date(); hoje.setHours(0,0,0,0); let ano=hoje.getFullYear(); let dd=d; if(d===29 && m===2 && !isLeapYear(ano)) dd=28; let prox=new Date(ano, m-1, dd); if(prox<hoje){ ano++; dd=d; if(d===29 && m===2 && !isLeapYear(ano)) dd=28; prox=new Date(ano, m-1, dd); } return Math.round((prox-hoje)/(1000*60*60*24)); }
+let cacheAnivMap={};
+function rebuildAnivMap(){ cacheAnivMap={}; cacheMusicosNomes.forEach(m=>{ if(m.id) cacheAnivMap[String(m.id)]=m.aniversario||''; }); }
+function getAniversarioMusico(id){ return cacheAnivMap[String(id)]||''; }
 let encontroAtual=null; let tab='encontros';
 let cacheInstrumentos=[]; let cacheCompositores=[]; let cacheMusicas=[]; let cacheMusicosNomes=[];
-let cacheRepertorioCounts={}; 
-let cacheMusicasNorm=[];
-let cacheCompositoresNorm=[]; // FIX 4: índice normalizado também para compositores/instrumentos/musicos
-let cacheInstrumentosNorm=[];
-let cacheMusicosNomesNorm=[];
-
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')});
-    btn.classList.add('tab-active');btn.classList.remove('text-zinc-400');
-    tab=btn.dataset.tab;
-    // FIX 1: nomes consistentes - agora todos usam o mesmo nome do data-tab
-    ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{
-      const el=document.getElementById('view-'+v);
-      if(el) el.classList.toggle('hidden', tab!==v);
-    });
-    document.getElementById('lista').classList.toggle('hidden', tab!=='encontros');
-    carregarLista();
-  };
-});
+let cacheRepertorioCounts={};
+let cacheMusicasNorm=[]; let cacheCompositoresNorm=[]; let cacheInstrumentosNorm=[]; let cacheMusicosNomesNorm=[];
+let pesquisaCache={encontros:[],presencas:[],repertorio:[],loaded:false,loading:false};
+let pesquisaFiltro={busca:'',inst:'',ordenar:'vezes',atalho:'todos'};
+let musicoSelecionadoId=null; let pesquisaStats=null; let pesquisaListenersOk=false;
+let musicosAbertos=new Set();
+async function loadAllPaginatedGlobal(table, select, orderCol='id'){ let all=[]; let from=0; const step=1000; while(true){ const {data, error}=await supabaseClient.from(table).select(select).order(orderCol).range(from, from+step-1); if(error){ console.error('Erro paginação', table, error); break; } if(!data || data.length===0) break; all=all.concat(data); if(data.length<step) break; from+=step; if(all.length>20000) break; } return all; }
+document.getElementById('btnToggleSidebar').onclick=()=>{ const sb=document.getElementById('sidebar'); sb.classList.toggle('hidden'); const btn=document.getElementById('btnToggleSidebar'); btn.textContent=sb.classList.contains('hidden') ? '▶ Mostrar lista' : '◀ Esconder lista'; };
+function alternarSubAbaOtimizacao(v){ const p=document.getElementById('otim-pesquisa'); const l=document.getElementById('otim-limpeza'); const bP=document.getElementById('sub-btn-pesquisa'); const bL=document.getElementById('sub-btn-limpeza'); if(v==='pesquisa'){ p.classList.remove('hidden'); l.classList.add('hidden'); bP.className='subtab-active flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-700 bg-zinc-800'; bL.className='flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-800 text-zinc-400'; } else { p.classList.add('hidden'); l.classList.remove('hidden'); bL.className='subtab-active flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-700 bg-zinc-800'; bP.className='flex-1 py-2.5 px-3 text-xs font-bold rounded-lg border border-zinc-800 text-zinc-400'; carregarLimpeza(); } }
+function initPesquisaListeners(){ if(pesquisaListenersOk) return; pesquisaListenersOk=true; document.getElementById('sub-btn-pesquisa').onclick=()=>alternarSubAbaOtimizacao('pesquisa'); document.getElementById('sub-btn-limpeza').onclick=()=>alternarSubAbaOtimizacao('limpeza'); document.getElementById('pesq-raiox-fechar').onclick=()=>{ document.getElementById('pesq-raiox').classList.add('hidden'); musicoSelecionadoId=null; renderFrequencia(); }; document.getElementById('pesq-busca').addEventListener('input', e=>{ pesquisaFiltro.busca=e.target.value; pesquisaFiltro.atalho='todos'; renderFrequencia(); }); document.getElementById('pesq-instrumento').addEventListener('change', e=>{ pesquisaFiltro.inst=e.target.value; renderFrequencia(); }); document.getElementById('pesq-ordenar').addEventListener('change', e=>{ pesquisaFiltro.ordenar=e.target.value; renderFrequencia(); }); document.getElementById('pesq-limpar').onclick=()=>{ pesquisaFiltro={busca:'',inst:'',ordenar:'vezes',atalho:'todos'}; document.getElementById('pesq-busca').value=''; document.getElementById('pesq-instrumento').value=''; document.getElementById('pesq-ordenar').value='vezes'; musicoSelecionadoId=null; document.getElementById('pesq-raiox').classList.add('hidden'); renderFrequencia(); }; document.querySelectorAll('.pesq-atalho').forEach(b=>{ b.onclick=()=>{ pesquisaFiltro.atalho=b.dataset.pesqAtalho; if(pesquisaFiltro.atalho==='todos'){ pesquisaFiltro.busca=''; document.getElementById('pesq-busca').value=''; } renderFrequencia(); }; }); document.getElementById('pesq-export').onclick=()=>{ if(!pesquisaStats) return; const rows=[['musico','instrumentos','rodas','percentual','primeira','ultima','sem_vir_quintas','aniversario_DDMM']]; pesquisaStats.musicosList.forEach(m=> rows.push([m.nome, m.instTop, m.count, m.perc.toFixed(1), m.primeira||'', m.ultima||'', m.semVir, getAniversarioMusico(m.id)||''])); const csv=rows.map(r=> r.map(c=> `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`frequencia_musicos_${new Date().toISOString().slice(0,10)}.csv`; a.click(); setTimeout(()=> URL.revokeObjectURL(url), 1000); }; }
+document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.onclick=()=>{ document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')}); btn.classList.add('tab-active');btn.classList.remove('text-zinc-400'); tab=btn.dataset.tab; ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{ const el=document.getElementById('view-'+v); if(el) el.classList.toggle('hidden', tab!==v); }); document.getElementById('lista').classList.toggle('hidden', tab!=='encontros'); carregarLista(); }; });
 async function carregarLista(){
   const lista=document.getElementById('lista'); const q=document.getElementById('search').value.trim();
-  if(tab!=='encontros'){
-    lista.innerHTML=`<div class="p-2 text-[11px] text-zinc-500">Aba ${tab}</div>`;
-    document.getElementById('stats').textContent=tab;
-    if(tab==='musicos') carregarMusicosMaster();
-    if(tab==='musicas') carregarMusicasMaster();
-    if(tab==='instrumentos') carregarInstrumentosMaster();
-    if(tab==='compositores') carregarCompositoresMaster();
-    if(tab==='otimizacoes') carregarOtimizacoes();
-    return;
-  }
-  lista.innerHTML='<div class="text-[11px] text-zinc-500 p-2">Carregando...</div>';
-  let {data}=await supabaseClient.from('encontros').select('id,numero,data,observacoes').order('numero',{ascending:false}).limit(150);
-  if(q){
-    const nq=normaliza(q);
-    data=data.filter(e=> normaliza(e.observacoes||'').includes(nq) || String(e.numero).includes(q));
-  }
-  lista.innerHTML=(data||[]).map(e=>`<div data-id="${e.id}" class="encontro-item p-2 rounded hover:bg-zinc-800 cursor-pointer border ${encontroAtual?.id===e.id?'bg-zinc-800 border-zinc-600':'border-transparent'}"><div class="font-bold text-xs">#${escapeHtml(e.numero)} - ${escapeHtml(e.data||'')}</div><div class="text-[11px] text-zinc-400 truncate">${escapeHtml(e.observacoes||'')}</div></div>`).join('');
+  if(tab!=='encontros'){ lista.innerHTML=`<div class="p-2 text- text-zinc-500">Aba ${tab}</div>`; document.getElementById('stats').textContent=tab; if(tab==='musicos') carregarMusicosMaster(); if(tab==='musicas') carregarMusicasMaster(); if(tab==='instrumentos') carregarInstrumentosMaster(); if(tab==='compositores') carregarCompositoresMaster(); if(tab==='otimizacoes') carregarOtimizacoes(); return; }
+  lista.innerHTML='<div class="text- text-zinc-500 p-2">Carregando...</div>';
+  let data=[];
+  try{
+    if(q){
+      const nq=normaliza(q);
+      const todos=await loadAllPaginatedGlobal('encontros','id,numero,data,observacoes','numero');
+      data=todos.filter(e=> normaliza(e.observacoes||'').includes(nq) || String(e.numero).includes(q) || normaliza(e.data||'').includes(nq));
+      data=[...data].sort((a,b)=> (b.numero||0)-(a.numero||0)).slice(0,200);
+    } else {
+      const res=await supabaseClient.from('encontros').select('id,numero,data,observacoes').order('numero',{ascending:false}).limit(150);
+      data=res.data||[];
+    }
+  }catch(e){ console.error(e); data=[]; }
+  lista.innerHTML=(data||[]).map(e=>{
+    const obsFull=e.observacoes||'';
+    const obsCurta=obsFull.length>70 ? obsFull.slice(0,70)+'…' : obsFull;
+    return `<div data-id="${e.id}" class="encontro-item p-2 rounded hover:bg-zinc-800 cursor-pointer border ${encontroAtual?.id===e.id?'bg-zinc-800 border-zinc-600':'border-transparent'}"><div class="font-bold text-xs">#${escapeHtml(e.numero)} - ${escapeHtml(e.data||'')}</div><div class="encontro-obs text- text-zinc-400" title="${escapeAttr(obsFull)}">${escapeHtml(obsCurta)}</div></div>`;
+  }).join('');
   lista.querySelectorAll('.encontro-item').forEach(el=> el.onclick=()=> selecionarEncontro(el.dataset.id));
   document.getElementById('stats').textContent=`${data?.length||0} encontros | Cache ${cacheMusicas.length} músicas`;
 }
-document.getElementById('search').addEventListener('input', carregarLista);
-document.addEventListener('keydown', (e)=>{
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); document.getElementById('search').focus(); }
-  if(e.key==='Escape'){ document.querySelectorAll('.autocomplete-list').forEach(el=> el.classList.add('hidden')); }
-});
-
+let searchDebounceTimer=null;
+document.getElementById('search').addEventListener('input', ()=>{ clearTimeout(searchDebounceTimer); searchDebounceTimer=setTimeout(()=> carregarLista(), 250); });
+document.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); document.getElementById('search').focus(); } if(e.key==='Escape'){ document.querySelectorAll('.autocomplete-list').forEach(el=> el.classList.add('hidden')); } });
+document.addEventListener('input', (e)=>{ if(e.target.id==='new-musico-nasc' || e.target.classList.contains('edit-nasc-musico')){ let v=e.target.value.replace(/\D/g,'').slice(0,4); if(v.length>=3) v=v.slice(0,2)+'/'+v.slice(2); e.target.value=v; } });
 async function loadCaches(){
-  const info=document.getElementById('cache-info');
-  const start=performance.now();
-  info.textContent='Carregando...';
-
-  async function loadAllPaginated(table, select){
-    let all=[]; let from=0; const step=1000;
-    while(true){
-      // FIX 5: order by id para paginação estável
-      const {data, error}=await supabaseClient.from(table).select(select).order('id').range(from, from+step-1);
-      if(error){ console.error('Erro paginação', table, error); break; }
-      if(!data || data.length===0) break;
-      all=all.concat(data);
-      if(data.length<step) break;
-      from+=step;
-      if(all.length>20000) break;
-    }
-    return all;
-  }
-
-  const loadInst = supabaseClient.from('instrumentos').select('id,nome').order('nome');
-  const loadComp = supabaseClient.from('compositores').select('id,nome').order('nome');
-  const loadMusicos = supabaseClient.from('musicos').select('id,nome').order('nome').limit(800);
-
-  const [instRes, compRes, musicosRes, musicasAll, repAll] = await Promise.all([
-    loadInst, loadComp, loadMusicos,
-    loadAllPaginated('musicas','id,titulo,compositor_id, compositores(id,nome)'),
-    loadAllPaginated('encontro_repertorio','musica_id,encontro_id')
-  ]);
-
-  cacheInstrumentos=instRes.data||[];
-  cacheCompositores=compRes.data||[];
-  cacheMusicosNomes=musicosRes.data||[];
-  cacheMusicas=(musicasAll||[]).sort((a,b)=> a.titulo.localeCompare(b.titulo));
-
-  // índices normalizados
-  cacheMusicasNorm = cacheMusicas.map(m=> ({...m, _normTitulo: normaliza(m.titulo), _normComp: normaliza(m.compositores?.nome||'')}));
-  cacheCompositoresNorm = cacheCompositores.map(c=> ({...c, _norm: normaliza(c.nome)}));
-  cacheInstrumentosNorm = cacheInstrumentos.map(i=> ({...i, _norm: normaliza(i.nome)}));
-  cacheMusicosNomesNorm = cacheMusicosNomes.map(m=> ({...m, _norm: normaliza(m.nome)}));
-
-  cacheRepertorioCounts={};
-  (repAll||[]).forEach(r=>{ cacheRepertorioCounts[r.musica_id]=(cacheRepertorioCounts[r.musica_id]||0)+1; });
-
-  const end=performance.now();
-  const tempo=((end-start)/1000).toFixed(2);
-  info.textContent=`Cache: ${cacheMusicas.length} músicas | ${Object.keys(cacheRepertorioCounts).length} tocadas | ${repAll.length} entradas | ${tempo}s`;
-  document.getElementById('count-musicas-total').textContent=cacheMusicas.length;
-  document.getElementById('musicas-total-info').textContent=`Total: ${cacheMusicas.length} | Tocadas: ${Object.keys(cacheRepertorioCounts).length} | ${tempo}s`;
-  document.getElementById('opt-performance').innerHTML=`Carga: <b>${tempo}s</b><br>Músicas: ${cacheMusicas.length}<br>Normaliza cache: ${normalizaCache.size}`;
-  document.getElementById('opt-contagem').innerHTML=`Total músicas: <b>${cacheMusicas.length}</b><br>Distintas tocadas: <b>${Object.keys(cacheRepertorioCounts).length}</b><br>Total entradas: <b>${repAll.length}</b>`;
-
-  // lista fixes aplicados
-  document.getElementById('fixes-list').innerHTML=`
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 1</b> Tab nomes consistentes<br><span class="text-zinc-500">encontros vs encontro causava view escondida</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 2</b> XSS escapeHtml<br><span class="text-zinc-500">título com &lt;script&gt; quebrava</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 3</b> Cache normaliza limitado 5000<br><span class="text-zinc-500">vazava memória</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 4</b> Índice normalizado para todos<br><span class="text-zinc-500">comp/inst/músicos 10x mais rápido</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 5</b> Paginação order by id<br><span class="text-zinc-500">range sem order é instável</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 6</b> Cache removido após fundir<br><span class="text-zinc-500">antes mantinha id deletado</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 7</b> getOrCreate usa cache<br><span class="text-zinc-500">antes buscava todas linhas toda vez</span></div>
-    <div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 8</b> Export CSV revoke URL<br><span class="text-zinc-500">vazava objeto URL</span></div>
-  `;
+  const info=document.getElementById('cache-info'); const start=performance.now(); info.textContent='Carregando...';
+  try{
+    const [instRes, compRes, musicosRes, musicasAll, repAll] = await Promise.all([
+      loadAllPaginatedGlobal('instrumentos','id,nome','nome'),
+      loadAllPaginatedGlobal('compositores','id,nome','nome'),
+      loadAllPaginatedGlobal('musicos','id,nome,aniversario','nome'),
+      loadAllPaginatedGlobal('musicas','id,titulo,compositor_id, compositores(id,nome)','id'),
+      loadAllPaginatedGlobal('encontro_repertorio','musica_id,encontro_id','encontro_id')
+    ]);
+    cacheInstrumentos=instRes||[]; cacheCompositores=compRes||[]; cacheMusicosNomes=musicosRes||[]; cacheMusicas=[...(musicasAll||[])].sort((a,b)=> a.titulo.localeCompare(b.titulo));
+    cacheMusicasNorm = cacheMusicas.map(m=> ({...m, _normTitulo: normaliza(m.titulo), _normComp: normaliza(m.compositores?.nome||'')})); cacheCompositoresNorm = cacheCompositores.map(c=> ({...c, _norm: normaliza(c.nome)})); cacheInstrumentosNorm = cacheInstrumentos.map(i=> ({...i, _norm: normaliza(i.nome)})); cacheMusicosNomesNorm = cacheMusicosNomes.map(m=> ({...m, _norm: normaliza(m.nome)}));
+    rebuildAnivMap();
+    cacheRepertorioCounts={}; (repAll||[]).forEach(r=>{ cacheRepertorioCounts[r.musica_id]=(cacheRepertorioCounts[r.musica_id]||0)+1; });
+    const end=performance.now(); const tempo=((end-start)/1000).toFixed(2); info.textContent=`Cache: ${cacheMusicas.length} músicas | ${Object.keys(cacheRepertorioCounts).length} tocadas | ${repAll.length} entradas | ${tempo}s`; document.getElementById('count-musicas-total').textContent=cacheMusicas.length; document.getElementById('musicas-total-info').textContent=`Total: ${cacheMusicas.length} | Tocadas: ${Object.keys(cacheRepertorioCounts).length} | ${tempo}s`;
+    const optPerf=document.getElementById('opt-performance'); if(optPerf) optPerf.innerHTML=`Carga: <b>${tempo}s</b><br>Músicas: ${cacheMusicas.length}<br>Normaliza cache: ${normalizaCache.size}`; const optCont=document.getElementById('opt-contagem'); if(optCont) optCont.innerHTML=`Total músicas: <b>${cacheMusicas.length}</b><br>Distintas tocadas: <b>${Object.keys(cacheRepertorioCounts).length}</b><br>Total entradas: <b>${repAll.length}</b>`;
+    const fixesEl=document.getElementById('fixes-list'); if(fixesEl) fixesEl.innerHTML=`<div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 1</b> Tab nomes consistentes</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 2</b> XSS escapeHtml</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 3</b> Cache normaliza limitado 5000</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 4</b> Índice normalizado</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 5</b> Paginação order by id</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 6</b> Cache removido após fundir</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 7</b> getOrCreate usa cache</div><div class="bg-zinc-900 border border-emerald-800/30 rounded p-2"><b class="text-emerald-300">✓ FIX 8</b> Export CSV revoke URL</div>`;
+  }catch(e){ console.error(e); info.textContent='Erro ao carregar cache: '+e.message; showStatus('Erro ao carregar cache: '+e.message, true); }
 }
 loadCaches();
 document.getElementById('btnRecarregarCache').onclick=()=>{ loadCaches().then(()=>{ showStatus('✅ Cache recarregado v8.1'); if(tab==='musicas') carregarMusicasMaster(); if(tab==='otimizacoes') carregarOtimizacoes(); }); };
-document.getElementById('btnExport').onclick=()=>{
-  const csv = ['titulo,compositor,vezes_tocada', ...cacheMusicas.map(m=> `"${(m.titulo||'').replace(/"/g,'""')}","${(m.compositores?.nome||'').replace(/"/g,'""')}",${cacheRepertorioCounts[m.id]||0}`)].join('\n');
-  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`repertorio_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-  // FIX 8: revoke
-  setTimeout(()=> URL.revokeObjectURL(url), 1000);
-};
-
-function createKeyboardAC(input, listEl, getResults, onSelect, onFreeText){
-  let selectedIndex = -1; let currentResults = []; let debounceTimer;
-  function renderList(results){
-    currentResults = results; selectedIndex = -1;
-    if(results.length===0){ listEl.classList.add('hidden'); if(onFreeText) onFreeText(input.value); return; }
-    listEl.innerHTML = results.map((r,i)=> r.html).join('');
-    listEl.classList.remove('hidden');
-    listEl.querySelectorAll('.ac-item').forEach((el,i)=>{ el.onclick=()=> selectItem(i); el.onmouseenter=()=> setActive(i); });
-  }
-  function setActive(idx){ listEl.querySelectorAll('.ac-item').forEach(el=> el.classList.remove('active')); if(idx>=0 && idx < listEl.children.length){ listEl.children[idx].classList.add('active'); listEl.children[idx].scrollIntoView({block:'nearest'}); selectedIndex = idx; } }
-  function selectItem(idx){ if(idx<0 || idx>=currentResults.length) return; const item = currentResults[idx]; onSelect(item); listEl.classList.add('hidden'); selectedIndex = -1; }
-  input.addEventListener('input', ()=>{
-    clearTimeout(debounceTimer);
-    const term = input.value.trim();
-    if((input.id==='new-musica-comp' || input.classList.contains('edit-comp')) && input.dataset.compId){
-      const normTerm = normaliza(term);
-      const cur = cacheCompositoresNorm.find(x=> x.id===input.dataset.compId);
-      if(!cur || cur._norm!==normTerm){
-        input.dataset.compId='';
-      }
-    }
-    if(term.length<1){ listEl.classList.add('hidden'); return; }
-    debounceTimer = setTimeout(()=>{ const results = getResults(term); renderList(results); }, 80);
-  });
-  input.addEventListener('keydown', (e)=>{
-    if(listEl.classList.contains('hidden') && e.key!=='Enter') return;
-    if(e.key==='ArrowDown'){ e.preventDefault(); if(listEl.classList.contains('hidden')){ const results = getResults(input.value.trim()); renderList(results); setActive(0); } else { setActive(Math.min(selectedIndex+1, currentResults.length-1)); } }
-    else if(e.key==='ArrowUp'){ e.preventDefault(); setActive(Math.max(selectedIndex-1, 0)); }
-    else if(e.key==='Enter'){ e.preventDefault(); if(selectedIndex>=0){ selectItem(selectedIndex); } else { if(currentResults.length>0 && !listEl.classList.contains('hidden')){ selectItem(0); } else { if(input.id==='new-musica-titulo') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-nome'){ const instInput = document.getElementById('new-musico-inst'); if(!instInput.value) instInput.focus(); else document.getElementById('btnConfirmAddMusico').click(); } if(input.id==='new-musica-comp' || input.id==='new-musico-inst'){ if(input.id==='new-musica-comp') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-inst') document.getElementById('btnConfirmAddMusico').click(); } } } } else if(e.key==='Escape'){ listEl.classList.add('hidden'); selectedIndex=-1; }
-  });
-  document.addEventListener('click', (e)=>{ if(!input.contains(e.target) && !listEl.contains(e.target)){ listEl.classList.add('hidden'); } });
-}
-
-const infoDiv = document.getElementById('musica-info');
-const inputMusica = document.getElementById('new-musica-titulo');
-const inputComp = document.getElementById('new-musica-comp');
-const listMusica = document.getElementById('ac-musica');
-const listComp = document.getElementById('ac-comp');
-
-createKeyboardAC(inputMusica, listMusica,
-  (term)=>{
-    const normTerm=normaliza(term);
-    const res = cacheMusicasNorm.filter(m=> m._normTitulo.includes(normTerm)).slice(0,15);
-    return res.map(m=>({ ...m, html: `<div class="ac-item"><div class="text-xs font-bold">${escapeHtml(m.titulo)} <span class="text-[10px] text-zinc-500">(${cacheRepertorioCounts[m.id]||0}x)</span></div><div class="text-[11px] text-emerald-400">→ ${escapeHtml(m.compositores?.nome||'Sem')}</div></div>`, titulo: m.titulo }));
-  },
-  (item)=>{
-    inputMusica.value=item.titulo; inputMusica.dataset.id=item.id; inputMusica.dataset.compOriginalId=item.compositor_id||'';
-    inputComp.value=item.compositores?.nome||''; inputComp.dataset.compId=item.compositor_id||''; inputComp.dataset.compOriginalId=item.compositor_id||'';
-    infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`✅ ${escapeHtml(item.titulo)} → ${escapeHtml(item.compositores?.nome||'')} | ${cacheRepertorioCounts[item.id]||0}x`; inputComp.focus(); inputComp.select();
-  },
-  (freeText)=>{ if(freeText.length>=2){ infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`Música nova: "${escapeHtml(freeText)}"`; inputMusica.dataset.id=''; inputComp.value=''; inputComp.dataset.compId=''; } }
-);
-createKeyboardAC(inputComp, listComp,
-  (term)=>{ const n=normaliza(term); return cacheCompositoresNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); },
-  (item)=>{ inputComp.value=item.nome; inputComp.dataset.compId=item.id; listComp.classList.add('hidden'); infoDiv.innerHTML=`⚠ Vai alterar para <b>${escapeHtml(item.nome)}</b>`; infoDiv.classList.remove('hidden'); }
-);
-const inputMusicoNome = document.getElementById('new-musico-nome');
-const listMusico = document.getElementById('ac-musico');
-const inputMusicoInst = document.getElementById('new-musico-inst');
-const listInst = document.getElementById('ac-inst');
-createKeyboardAC(inputMusicoNome, listMusico,
-  (term)=>{ const n=normaliza(term); return cacheMusicosNomesNorm.filter(m=> m._norm.includes(n)).slice(0,8).map(m=>({ ...m, html:`<div class="ac-item text-xs">${escapeHtml(m.nome)}</div>` })); },
-  (item)=>{ inputMusicoNome.value=item.nome; inputMusicoNome.dataset.id=item.id; inputMusicoInst.focus(); }
-);
-createKeyboardAC(inputMusicoInst, listInst,
-  (term)=>{ const n=normaliza(term); return cacheInstrumentosNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); },
-  (item)=>{ inputMusicoInst.value=item.nome; inputMusicoInst.dataset.id=item.id; document.getElementById('btnConfirmAddMusico').click(); }
-);
-
-// FIX 6 e OTIMIZAÇÃO: fundir com Promise.all + remove do cache
-async function fundirMusicos(mantemId, apagaId){
-  const {data: presApaga}=await supabaseClient.from('encontro_musicos').select('encontro_id').eq('musico_id', apagaId);
-  const {data: presMantem}=await supabaseClient.from('encontro_musicos').select('encontro_id').eq('musico_id', mantemId);
-  const setMantem=new Set((presMantem||[]).map(p=>p.encontro_id));
-  const toDelete=[]; const toUpdate=[];
-  for(const p of (presApaga||[])){
-    if(setMantem.has(p.encontro_id)) toDelete.push(p.encontro_id);
-    else toUpdate.push(p.encontro_id);
-  }
-  if(toDelete.length) await supabaseClient.from('encontro_musicos').delete().eq('musico_id', apagaId).in('encontro_id', toDelete);
-  if(toUpdate.length){
-    // otimizado: atualiza em lote onde possível
-    await Promise.all(toUpdate.map(eid=> supabaseClient.from('encontro_musicos').update({musico_id: mantemId}).eq('musico_id', apagaId).eq('encontro_id', eid)));
-  }
-  await supabaseClient.from('musicos').delete().eq('id', apagaId);
-  // FIX 6: remove do cache
-  cacheMusicosNomes=cacheMusicosNomes.filter(m=> m.id!==apagaId);
-  cacheMusicosNomesNorm=cacheMusicosNomesNorm.filter(m=> m.id!==apagaId);
-}
-async function fundirMusicas(mantemId, apagaId){
-  const {data: repApaga}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', apagaId);
-  const {data: repMantem}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', mantemId);
-  const setMantem=new Set((repMantem||[]).map(r=>r.encontro_id));
-  const toDelete=[]; const toUpdate=[];
-  for(const r of (repApaga||[])){
-    if(setMantem.has(r.encontro_id)) toDelete.push(r.encontro_id);
-    else toUpdate.push(r.encontro_id);
-  }
-  if(toDelete.length) await supabaseClient.from('encontro_repertorio').delete().eq('musica_id', apagaId).in('encontro_id', toDelete);
-  if(toUpdate.length) await Promise.all(toUpdate.map(eid=> supabaseClient.from('encontro_repertorio').update({musica_id: mantemId}).eq('musica_id', apagaId).eq('encontro_id', eid)));
-  await supabaseClient.from('musicas').delete().eq('id', apagaId);
-  // FIX 6
-  cacheMusicas=cacheMusicas.filter(m=> m.id!==apagaId);
-  cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==apagaId);
-  const movedCount=cacheRepertorioCounts[apagaId]||0;
-  cacheRepertorioCounts[mantemId]=(cacheRepertorioCounts[mantemId]||0)+movedCount;
-  delete cacheRepertorioCounts[apagaId];
-}
-async function fundirCompositores(mantemId, apagaId){
-  await supabaseClient.from('musicas').update({compositor_id: mantemId}).eq('compositor_id', apagaId);
-  await supabaseClient.from('compositores').delete().eq('id', apagaId);
-  cacheCompositores=cacheCompositores.filter(c=> c.id!==apagaId);
-  cacheCompositoresNorm=cacheCompositoresNorm.filter(c=> c.id!==apagaId);
-}
-async function fundirInstrumentos(mantemId, apagaId){
-  await supabaseClient.from('encontro_musicos').update({instrumento_id: mantemId}).eq('instrumento_id', apagaId);
-  await supabaseClient.from('instrumentos').delete().eq('id', apagaId);
-  cacheInstrumentos=cacheInstrumentos.filter(i=> i.id!==apagaId);
-  cacheInstrumentosNorm=cacheInstrumentosNorm.filter(i=> i.id!==apagaId);
-}
-
-async function carregarMusicosMaster(){
-  const cont=document.getElementById('musicos-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>';
-  const {data: musicos}=await supabaseClient.from('musicos').select('id,nome').order('nome').limit(300);
-  const {data: pres}=await supabaseClient.from('encontro_musicos').select('musico_id, encontro_id, instrumentos(id,nome), encontros(id,numero)').limit(2000);
-  const mapa={}; (pres||[]).forEach(p=>{ if(!mapa[p.musico_id]) mapa[p.musico_id]=[]; mapa[p.musico_id].push(p); });
-  let filtered=musicos; const q=document.getElementById('search').value.trim(); if(q) filtered=musicos.filter(m=> normaliza(m.nome).includes(normaliza(q)));
-  cont.innerHTML=filtered.map(m=>{
-    const lista=(mapa[m.id]||[]).sort((a,b)=> (b.encontros?.numero||0)-(a.encontros?.numero||0));
-    const encontrosHtml=lista.map(l=>`<div class="flex items-center gap-1 bg-zinc-800/80 p-1.5 rounded text-[11px]"><button data-eid="${l.encontros?.id}" class="chip bg-zinc-700 px-1.5 py-0.5 rounded">#${l.encontros?.numero||'?'}</button><span class="flex-1">${escapeHtml(l.instrumentos?.nome||'Sem inst')}</span></div>`).join('')||'<div class="text-[11px] text-zinc-600">Nenhuma roda</div>';
-    return `<div class="group bg-zinc-900 border border-zinc-800 p-3 rounded"><div class="flex gap-2"><input value="${escapeAttr(m.nome)}" class="edit-nome-musico flex-1 bg-zinc-800 border border-zinc-700 rounded p-2 text-sm"><button class="btn-save-nome bg-emerald-600 text-white px-3 py-2 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del-musico text-zinc-500 px-2 text-xs">✕</button></div><div class="mt-2 space-y-1 max-h-[180px] overflow-y-auto">${encontrosHtml}</div></div>`;
-  }).join('');
-  cont.querySelectorAll('.group').forEach((row, idx)=>{
-    const musicoId=filtered[idx]?.id; const inputNome=row.querySelector('.edit-nome-musico'); const btnSaveNome=row.querySelector('.btn-save-nome'); const btnDel=row.querySelector('.btn-del-musico');
-    btnSaveNome.onclick=async()=>{
-      const novo=inputNome.value.trim(); if(!novo) return; btnSaveNome.textContent='...';
-      try{
-        const {error}=await supabaseClient.from('musicos').update({nome: novo}).eq('id', musicoId);
-        if(!error) showStatus(`✅ ${novo}`);
-        else if(error.code==='23505'){
-          const {data: existente}=await supabaseClient.from('musicos').select('id,nome').ilike('nome', novo).limit(1).single();
-          if(confirm(`FUSÃO MÚSICOS\n"${inputNome.value}" → "${existente.nome}"?`)){ await fundirMusicos(existente.id, musicoId); showStatus(`✅ FUNDIDO`); row.remove(); }
-        } else throw error;
-      }catch(e){ showStatus(e.message,true); }
-      btnSaveNome.textContent='Salvar / Fundir';
-    };
-    btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('musicos').delete().eq('id', musicoId); if(error) showStatus(error.message,true); else row.remove(); };
-    row.querySelectorAll('.chip').forEach(ch=> ch.onclick=()=> selecionarEncontro(ch.dataset.eid));
-  });
-}
-async function carregarMusicasMaster(){
-  const cont=document.getElementById('musicas-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>';
-  let filtered=cacheMusicas; const q=document.getElementById('search').value.trim(); if(q) filtered=cacheMusicasNorm.filter(m=> m._normTitulo.includes(normaliza(q)) || m._normComp.includes(normaliza(q)));
-  filtered=filtered.sort((a,b)=> (cacheRepertorioCounts[b.id]||0)-(cacheRepertorioCounts[a.id]||0)).slice(0,250);
-  cont.innerHTML=filtered.map(m=>{
-    const vezes=cacheRepertorioCounts[m.id]||0;
-    const badge=vezes>0?`<span class="text-[10px] bg-emerald-900/30 text-emerald-300 px-1.5 py-0.5 rounded">${vezes}x</span>`:`<span class="text-[10px] bg-amber-900/30 text-amber-300 px-1.5 py-0.5 rounded">0x</span>`;
-    return `<div class="group bg-zinc-900 border border-zinc-800 p-3 rounded"><div class="grid grid-cols-[1fr_200px_120px] gap-2"><div><div class="flex gap-2 items-center"><input value="${escapeAttr(m.titulo)}" class="edit-titulo flex-1 bg-zinc-800 border border-zinc-700 rounded p-2 text-xs">${badge}</div></div><div class="relative"><input value="${escapeAttr(m.compositores?.nome||'')}" data-comp-id="${m.compositor_id||''}" class="edit-comp w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-xs"><div class="ac-list autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div><div class="flex gap-1"><button class="btn-save bg-emerald-600 text-white px-2 py-2 rounded text-[11px] font-bold w-full">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div></div></div>`;
-  }).join('');
-  cont.querySelectorAll('.group').forEach((row, idx)=>{
-    const realId=filtered[idx]?.id; const inpTit=row.querySelector('.edit-titulo'); const inpComp=row.querySelector('.edit-comp'); const acList=row.querySelector('.ac-list'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del');
-    let t; inpComp.addEventListener('input', ()=>{ clearTimeout(t); const term=inpComp.value.trim(); if(term.length<2){ acList.classList.add('hidden'); inpComp.dataset.compId=''; return; } t=setTimeout(()=>{ const res=cacheCompositoresNorm.filter(c=> c._norm.includes(normaliza(term))).slice(0,8); if(res.length===0){ acList.classList.add('hidden'); return; } acList.innerHTML=res.map(r=> `<div class="p-1.5 hover:bg-zinc-700 cursor-pointer text-xs" data-id="${r.id}" data-nome="${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</div>`).join(''); acList.classList.remove('hidden'); acList.querySelectorAll('div').forEach(d=> d.onclick=()=>{ inpComp.value=d.dataset.nome; inpComp.dataset.compId=d.dataset.id; acList.classList.add('hidden'); }); },150); });
-    btnSave.onclick=async()=>{
-      const novoTitulo=inpTit.value.trim(); const compNome=inpComp.value.trim(); if(!novoTitulo) return; btnSave.textContent='...';
-      try{
-        let compId=inpComp.dataset.compId;
-        // FIX v8.4 FINAL: resolve qualquer compositor digitado livre (não só quando !compId)
-        if(compNome){
-          const normComp = normaliza(compNome);
-          const cur = compId ? cacheCompositoresNorm.find(x=> x.id===compId) : null;
-          if(!cur || cur._norm!==normComp){
-            const f=cacheCompositoresNorm.find(c=> c._norm===normComp);
-            if(f) compId=f.id; else { const {data:n}=await supabaseClient.from('compositores').insert({nome: compNome}).select('id').single(); compId=n.id; const novo={id: compId, nome: compNome, _norm: normComp}; cacheCompositores.push({id: compId, nome: compNome}); cacheCompositoresNorm.push(novo); }
-            inpComp.dataset.compId=compId;
-          }
-        }
-        const {error}=await supabaseClient.from('musicas').update({titulo: novoTitulo, compositor_id: compId||null}).eq('id', realId);
-        if(!error){
-          showStatus(`✅ "${novoTitulo}" → ${compNome}`);
-          const upd={titulo: novoTitulo, compositor_id: compId, compositores: {id: compId, nome: compNome}, _normTitulo: normaliza(novoTitulo), _normComp: normaliza(compNome)};
-          cacheMusicas = cacheMusicas.map(m=> m.id===realId ? {...m, ...upd} : m);
-          cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===realId ? {...m, ...upd} : m);
-        }
-        else if(error.code==='23505'){
-          const {data: existente}=await supabaseClient.from('musicas').select('id,titulo').ilike('titulo', novoTitulo).limit(1).single();
-          if(confirm(`FUSÃO CHORO\n"${novoTitulo}" já existe! Fundir?`)){ await fundirMusicas(existente.id, realId); showStatus(`✅ FUNDIDO`); row.remove(); }
-        } else throw error;
-      }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir';
-    };
-    btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inpTit.value}"?`)) return; const {error}=await supabaseClient.from('musicas').delete().eq('id', realId); if(error) showStatus(error.message,true); else {row.remove(); delete cacheRepertorioCounts[realId]; cacheMusicas=cacheMusicas.filter(m=> m.id!==realId); cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==realId);} };
-  });
-}
-async function carregarInstrumentosMaster(){
-  const cont=document.getElementById('instrumentos-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>';
-  const {data: inst}=await supabaseClient.from('instrumentos').select('id,nome').order('nome');
-  let filtered=inst; const q=document.getElementById('search').value.trim(); if(q) filtered=inst.filter(i=> normaliza(i.nome).includes(normaliza(q)));
-  cont.innerHTML=filtered.map(i=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(i.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join('');
-  cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ const novo=inp.value.trim(); if(!novo) return; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('instrumentos').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('instrumentos').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirInstrumentos(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('instrumentos').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; });
-}
-async function carregarCompositoresMaster(){
-  const cont=document.getElementById('compositores-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>';
-  const {data: comps}=await supabaseClient.from('compositores').select('id,nome').order('nome').limit(250);
-  let filtered=comps; const q=document.getElementById('search').value.trim(); if(q) filtered=comps.filter(c=> normaliza(c.nome).includes(normaliza(q)));
-  cont.innerHTML=filtered.map(c=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(c.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text-[11px] font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join('');
-  cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ const novo=inp.value.trim(); if(!novo) return; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('compositores').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('compositores').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirCompositores(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar?`)) return; const {error}=await supabaseClient.from('compositores').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; });
-}
-async function carregarOtimizacoes(){
-  const el1=document.getElementById('opt-musicas-duplicatas'); const el2=document.getElementById('opt-musicos-duplicatas'); const el3=document.getElementById('opt-musicas-nunca');
-  el1.innerHTML='Carregando...'; 
-  const porTitulo={}; cacheMusicasNorm.forEach(m=>{ const t=m._normTitulo; if(t.length<3) return; if(!porTitulo[t]) porTitulo[t]=[]; porTitulo[t].push(`${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')} (${cacheRepertorioCounts[m.id]||0}x)`); });
-  const dupMusicas=Object.entries(porTitulo).filter(([k,v])=> v.length>1).slice(0,20).map(([k,v])=> `<div class="p-1.5 hover:bg-zinc-800 rounded border-b border-zinc-800/50"><b>${escapeHtml(k)}:</b><br>${v.join('<br>')}</div>`).join('');
-  el1.innerHTML=dupMusicas||'<span class="text-zinc-600">Nenhuma duplicata!</span>';
-
-  const porPrimeiro={}; cacheMusicosNomesNorm.forEach(m=>{ const primeiro=normaliza(m.nome).split(' ')[0]; if(primeiro.length<3) return; if(!porPrimeiro[primeiro]) porPrimeiro[primeiro]=[]; porPrimeiro[primeiro].push(m.nome); });
-  const dupMusicos=Object.entries(porPrimeiro).filter(([k,v])=> v.length>1 && v.length<8).slice(0,15).map(([k,v])=> `<div class="p-1 hover:bg-zinc-800 rounded"><b>${escapeHtml(k)}:</b> ${v.map(escapeHtml).join(', ')}</div>`).join('');
-  el2.innerHTML=dupMusicos||'<span class="text-zinc-600">Nenhum</span>';
-
-  const nunca=cacheMusicas.filter(m=> !cacheRepertorioCounts[m.id]).slice(0,80).map(m=> `<div class="p-1 flex justify-between"><span>${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')}</span><span class="text-[10px] text-zinc-500">0x</span></div>`).join('');
-  el3.innerHTML=nunca||'<span class="text-zinc-600">Todas tocadas!</span>';
-}
-
+document.getElementById('btnExport').onclick=()=>{ const csv = ['titulo,compositor,vezes_tocada', ...cacheMusicas.map(m=> `"${(m.titulo||'').replace(/"/g,'""')}","${(m.compositores?.nome||'').replace(/"/g,'""')}",${cacheRepertorioCounts[m.id]||0}`)].join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`repertorio_${new Date().toISOString().slice(0,10)}.csv`; a.click(); setTimeout(()=> URL.revokeObjectURL(url), 1000); };
+function createKeyboardAC(input, listEl, getResults, onSelect, onFreeText){ let selectedIndex = -1; let currentResults = []; let debounceTimer; function clearStaleIfNeeded(){ const curVal=input.value.trim(); if(input.dataset.selectedName){ if(normaliza(curVal)!==normaliza(input.dataset.selectedName)){ input.dataset.id=''; if(input.dataset.compId) input.dataset.compId=''; if(input.dataset.compOriginalId) input.dataset.compOriginalId=''; input.dataset.selectedName=''; } } } function renderList(results){ currentResults = results; selectedIndex = -1; if(results.length===0){ listEl.classList.add('hidden'); if(onFreeText) onFreeText(input.value); return; } listEl.innerHTML = results.map((r,i)=> r.html).join(''); listEl.classList.remove('hidden'); listEl.querySelectorAll('.ac-item').forEach((el,i)=>{ el.onclick=()=> selectItem(i); el.onmouseenter=()=> setActive(i); }); } function setActive(idx){ listEl.querySelectorAll('.ac-item').forEach(el=> el.classList.remove('active')); if(idx>=0 && idx < listEl.children.length){ listEl.children[idx].classList.add('active'); listEl.children[idx].scrollIntoView({block:'nearest'}); selectedIndex = idx; } } function selectItem(idx){ if(idx<0 || idx>=currentResults.length) return; const item = currentResults[idx]; onSelect(item); input.dataset.selectedName=input.value.trim(); listEl.classList.add('hidden'); selectedIndex = -1; } input.addEventListener('input', ()=>{ clearStaleIfNeeded(); clearTimeout(debounceTimer); const term = input.value.trim(); if((input.id==='new-musica-comp' || input.classList.contains('edit-comp')) && input.dataset.compId){ const normTerm = normaliza(term); const cur = cacheCompositoresNorm.find(x=> x.id===input.dataset.compId); if(!cur || cur._norm!==normTerm){ input.dataset.compId=''; } } if(term.length<1){ listEl.classList.add('hidden'); return; } debounceTimer = setTimeout(()=>{ const results = getResults(term); renderList(results); }, 80); }); input.addEventListener('keydown', (e)=>{ if(listEl.classList.contains('hidden') && e.key!=='Enter') return; if(e.key==='ArrowDown'){ e.preventDefault(); if(listEl.classList.contains('hidden')){ const results = getResults(input.value.trim()); renderList(results); setActive(0); } else { setActive(Math.min(selectedIndex+1, currentResults.length-1)); } } else if(e.key==='ArrowUp'){ e.preventDefault(); setActive(Math.max(selectedIndex-1, 0)); } else if(e.key==='Enter'){ e.preventDefault(); if(selectedIndex>=0){ selectItem(selectedIndex); } else { if(currentResults.length>0 && !listEl.classList.contains('hidden')){ selectItem(0); } else { if(input.id==='new-musica-titulo') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-nome'){ const instInput = document.getElementById('new-musico-inst'); if(!instInput.value) instInput.focus(); else document.getElementById('btnConfirmAddMusico').click(); } if(input.id==='new-musica-comp' || input.id==='new-musico-inst'){ if(input.id==='new-musica-comp') document.getElementById('btnConfirmAddMusica').click(); if(input.id==='new-musico-inst') document.getElementById('btnConfirmAddMusico').click(); } } } } else if(e.key==='Escape'){ listEl.classList.add('hidden'); selectedIndex=-1; } }); document.addEventListener('click', (e)=>{ if(!input.contains(e.target) && !listEl.contains(e.target)){ listEl.classList.add('hidden'); } }); }
+const infoDiv = document.getElementById('musica-info'); const inputMusica = document.getElementById('new-musica-titulo'); const inputComp = document.getElementById('new-musica-comp'); const listMusica = document.getElementById('ac-musica'); const listComp = document.getElementById('ac-comp');
+createKeyboardAC(inputMusica, listMusica, (term)=>{ const normTerm=normaliza(term); const res = cacheMusicasNorm.filter(m=> m._normTitulo.includes(normTerm)).slice(0,15); return res.map(m=>({ ...m, html: `<div class="ac-item"><div class="text-xs font-bold">${escapeHtml(m.titulo)} <span class="text- text-zinc-500">(${cacheRepertorioCounts[m.id]||0}x)</span></div><div class="text- text-emerald-400">→ ${escapeHtml(m.compositores?.nome||'Sem')}</div></div>`, titulo: m.titulo })); }, (item)=>{ inputMusica.value=item.titulo; inputMusica.dataset.id=item.id; inputMusica.dataset.compOriginalId=item.compositor_id||''; inputComp.value=item.compositores?.nome||''; inputComp.dataset.compId=item.compositor_id||''; inputComp.dataset.compOriginalId=item.compositor_id||''; inputComp.dataset.selectedName=item.compositores?.nome||''; infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`✅ ${escapeHtml(item.titulo)} → ${escapeHtml(item.compositores?.nome||'')} | ${cacheRepertorioCounts[item.id]||0}x`; inputComp.focus(); inputComp.select(); }, (freeText)=>{ if(freeText.length>=2){ infoDiv.classList.remove('hidden'); infoDiv.innerHTML=`Música nova: "${escapeHtml(freeText)}"`; if(inputMusica.dataset.selectedName && normaliza(freeText)!==normaliza(inputMusica.dataset.selectedName)){ inputMusica.dataset.id=''; } inputComp.value=''; inputComp.dataset.compId=''; inputComp.dataset.selectedName=''; } });
+createKeyboardAC(inputComp, listComp, (term)=>{ const n=normaliza(term); return cacheCompositoresNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); }, (item)=>{ inputComp.value=item.nome; inputComp.dataset.compId=item.id; inputComp.dataset.selectedName=item.nome; listComp.classList.add('hidden'); infoDiv.innerHTML=`⚠ Vai alterar para <b>${escapeHtml(item.nome)}</b>`; infoDiv.classList.remove('hidden'); });
+const inputMusicoNome = document.getElementById('new-musico-nome'); const listMusico = document.getElementById('ac-musico'); const inputMusicoInst = document.getElementById('new-musico-inst'); const listInst = document.getElementById('ac-inst');
+createKeyboardAC(inputMusicoNome, listMusico, (term)=>{ const n=normaliza(term); return cacheMusicosNomesNorm.filter(m=> m._norm.includes(n)).slice(0,8).map(m=>({ ...m, html:`<div class="ac-item text-xs">${escapeHtml(m.nome)}</div>` })); }, (item)=>{ inputMusicoNome.value=item.nome; inputMusicoNome.dataset.id=item.id; inputMusicoNome.dataset.selectedName=item.nome; inputMusicoInst.focus(); });
+createKeyboardAC(inputMusicoInst, listInst, (term)=>{ const n=normaliza(term); return cacheInstrumentosNorm.filter(c=> c._norm.includes(n)).slice(0,8).map(c=>({ ...c, html:`<div class="ac-item text-xs">${escapeHtml(c.nome)}</div>` })); }, (item)=>{ inputMusicoInst.value=item.nome; inputMusicoInst.dataset.id=item.id; inputMusicoInst.dataset.selectedName=item.nome; document.getElementById('btnConfirmAddMusico').click(); });
+async function deleteEncontroMusico(musico_id, encontro_id, instrumento_id){ let q=supabaseClient.from('encontro_musicos').delete().eq('musico_id', musico_id).eq('encontro_id', encontro_id); if(instrumento_id===null || instrumento_id===undefined) q=q.is('instrumento_id', null); else q=q.eq('instrumento_id', instrumento_id); await q; }
+async function updateEncontroMusico(apagaId, encontro_id, instrumento_id, mantemId){ let q=supabaseClient.from('encontro_musicos').update({musico_id: mantemId}).eq('musico_id', apagaId).eq('encontro_id', encontro_id); if(instrumento_id===null || instrumento_id===undefined) q=q.is('instrumento_id', null); else q=q.eq('instrumento_id', instrumento_id); await q; }
+async function fundirMusicos(mantemId, apagaId){ const {data: presApaga}=await supabaseClient.from('encontro_musicos').select('encontro_id,instrumento_id').eq('musico_id', apagaId); const {data: presMantem}=await supabaseClient.from('encontro_musicos').select('encontro_id,instrumento_id').eq('musico_id', mantemId); const setMantem=new Set((presMantem||[]).map(p=> `${p.encontro_id}||${p.instrumento_id||'null'}`)); const toDelete=[]; const toUpdate=[]; for(const p of (presApaga||[])){ const key=`${p.encontro_id}||${p.instrumento_id||'null'}`; if(setMantem.has(key)) toDelete.push(p); else toUpdate.push(p); } for(const p of toDelete){ await deleteEncontroMusico(apagaId, p.encontro_id, p.instrumento_id); } for(const p of toUpdate){ await updateEncontroMusico(apagaId, p.encontro_id, p.instrumento_id, mantemId); } await supabaseClient.from('musicos').delete().eq('id', apagaId); cacheMusicosNomes=cacheMusicosNomes.filter(m=> m.id!==apagaId); cacheMusicosNomesNorm=cacheMusicosNomesNorm.filter(m=> m.id!==apagaId); delete cacheAnivMap[String(apagaId)]; }
+async function fundirMusicas(mantemId, apagaId){ const {data: repApaga}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', apagaId); const {data: repMantem}=await supabaseClient.from('encontro_repertorio').select('encontro_id').eq('musica_id', mantemId); const setMantem=new Set((repMantem||[]).map(r=>r.encontro_id)); const toDelete=[]; const toUpdate=[]; for(const r of (repApaga||[])){ if(setMantem.has(r.encontro_id)) toDelete.push(r.encontro_id); else toUpdate.push(r.encontro_id); } for(const eid of toDelete){ await supabaseClient.from('encontro_repertorio').delete().eq('musica_id', apagaId).eq('encontro_id', eid); } for(const eid of toUpdate){ await supabaseClient.from('encontro_repertorio').update({musica_id: mantemId}).eq('musica_id', apagaId).eq('encontro_id', eid); } await supabaseClient.from('musicas').delete().eq('id', apagaId); cacheMusicas=cacheMusicas.filter(m=> m.id!==apagaId); cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==apagaId); const movedCount=cacheRepertorioCounts[apagaId]||0; cacheRepertorioCounts[mantemId]=(cacheRepertorioCounts[mantemId]||0)+movedCount; delete cacheRepertorioCounts[apagaId]; }
+async function fundirCompositores(mantemId, apagaId){ await supabaseClient.from('musicas').update({compositor_id: mantemId}).eq('compositor_id', apagaId); await supabaseClient.from('compositores').delete().eq('id', apagaId); cacheCompositores=cacheCompositores.filter(c=> c.id!==apagaId); cacheCompositoresNorm=cacheCompositoresNorm.filter(c=> c.id!==apagaId); }
+async function fundirInstrumentos(mantemId, apagaId){ await supabaseClient.from('encontro_musicos').update({instrumento_id: mantemId}).eq('instrumento_id', apagaId); await supabaseClient.from('instrumentos').delete().eq('id', apagaId); cacheInstrumentos=cacheInstrumentos.filter(i=> i.id!==apagaId); cacheInstrumentosNorm=cacheInstrumentosNorm.filter(i=> i.id!==apagaId); }
+async function carregarMusicosMaster(){ const cont=document.getElementById('musicos-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>'; let musicos=[...cacheMusicosNomes]; if(musicos.length===0){ musicos=await loadAllPaginatedGlobal('musicos','id,nome,aniversario','nome'); cacheMusicosNomes=musicos; cacheMusicosNomesNorm=musicos.map(m=> ({...m, _norm: normaliza(m.nome)})); rebuildAnivMap(); } const pres=await loadAllPaginatedGlobal('encontro_musicos','musico_id,encontro_id,instrumento_id, instrumentos(id,nome), encontros(id,numero)','encontro_id'); const mapa={}; (pres||[]).forEach(p=>{ if(!mapa[p.musico_id]) mapa[p.musico_id]=[]; mapa[p.musico_id].push(p); }); let filtered=[...musicos]; const q=document.getElementById('search').value.trim(); if(q) filtered=musicos.filter(m=> normaliza(m.nome).includes(normaliza(q))); filtered=[...filtered].sort((a,b)=> a.nome.localeCompare(b.nome)); cont.innerHTML=filtered.map(m=>{ const lista=(mapa[m.id]||[]).sort((a,b)=> (b.encontros?.numero||0)-(a.encontros?.numero||0)); const encontrosHtml=lista.map(l=>`<div class="flex items-center gap-1 bg-zinc-800/80 p-1.5 rounded text-"><button data-eid="${l.encontros?.id}" class="chip bg-zinc-700 px-1.5 py-0.5 rounded">#${l.encontros?.numero||'?'}</button><span class="flex-1">${escapeHtml(l.instrumentos?.nome||'Sem inst')}</span></div>`).join('')||'<div class="text- text-zinc-600">Nenhuma roda</div>'; const aniv=m.aniversario||''; const dias=diasParaAniversario(aniv); const nascTxt=aniv? `🎂 ${aniv} ${dias===0? '• <b class="text-amber-300">HOJE!</b>' : dias!==null? `• falta ${dias} dia(s)` : ''}` : ''; const isOpen=musicosAbertos.has(String(m.id)); return `<div class="group bg-zinc-900 border border-zinc-800 rounded overflow-hidden"><button type="button" class="musico-toggle w-full flex justify-between items-center gap-2 p-2.5 text-left hover:bg-zinc-800/50"><span class="truncate text-xs"><b>${escapeHtml(m.nome)}</b> <span class="text-zinc-500">— ${lista.length} roda(s)</span></span><span class="flex items-center gap-2 shrink-0"><span class="musico-badge-aniv text- bg-amber-900/30 text-amber-200 px-1.5 py-0.5 rounded" style="${aniv?'':'display:none'}">🎂 ${aniv}</span><span class="musico-seta text-zinc-400 text-">${isOpen?'▼':'▶'}</span></span></button><div class="musico-body ${isOpen?'':'hidden'} p-3 pt-0 border-t border-zinc-800/60"><div class="flex gap-2 items-center flex-wrap pt-3"><input value="${escapeAttr(m.nome)}" class="edit-nome-musico flex-1 min-w- bg-zinc-800 border border-zinc-700 rounded p-2 text-sm"><input type="text" value="${escapeAttr(aniv)}" placeholder="DD/MM" maxlength="5" class="edit-nasc-musico bg-zinc-800 border border-zinc-700 rounded p-2 text-xs w- text-center" title="Aniversário só DD/MM"><button class="btn-save-nome bg-emerald-600 text-white px-3 py-2 rounded text- font-bold">Salvar / Fundir</button><button class="btn-del-musico text-zinc-500 px-2 text-xs">✕</button></div><div class="musico-nasc-txt text- text-zinc-400 mt-1">${nascTxt||'<span class="text-zinc-600"></span>'}</div><div class="mt-2 space-y-1 max-h- overflow-y-auto">${encontrosHtml}</div></div></div>`; }).join('');
+  const btnExp=document.getElementById('btnMusicosExpandir'); if(btnExp) btnExp.onclick=()=>{ filtered.forEach(m=> musicosAbertos.add(String(m.id))); cont.querySelectorAll('.musico-body').forEach(b=> b.classList.remove('hidden')); cont.querySelectorAll('.musico-seta').forEach(s=> s.textContent='▼'); };
+  const btnRec=document.getElementById('btnMusicosRecolher'); if(btnRec) btnRec.onclick=()=>{ musicosAbertos.clear(); cont.querySelectorAll('.musico-body').forEach(b=> b.classList.add('hidden')); cont.querySelectorAll('.musico-seta').forEach(s=> s.textContent='▶'); };
+  cont.querySelectorAll('.group').forEach((row, idx)=>{ const toggle=row.querySelector('.musico-toggle'); const body=row.querySelector('.musico-body'); const seta=row.querySelector('.musico-seta'); if(toggle && body){ toggle.onclick=()=>{ body.classList.toggle('hidden'); const isNowOpen=!body.classList.contains('hidden'); if(seta) seta.textContent=isNowOpen ? '▼' : '▶'; const mid=filtered[idx]?.id; if(mid){ if(isNowOpen) musicosAbertos.add(String(mid)); else musicosAbertos.delete(String(mid)); } }; } const musicoId=filtered[idx]?.id; const inputNome=row.querySelector('.edit-nome-musico'); const inputNasc=row.querySelector('.edit-nasc-musico'); const btnSaveNome=row.querySelector('.btn-save-nome'); const btnDel=row.querySelector('.btn-del-musico'); btnSaveNome.onclick=async()=>{ if(btnSaveNome.disabled) return; const novo=inputNome.value.trim(); let aniv=normalizarAniversario(inputNasc.value); if(inputNasc.value.trim() && !aniv){ showStatus('Aniversário inválido. Use DD/MM, ex: 15/03', true); return; } if(!novo) return; btnSaveNome.disabled=true; const origTxt=btnSaveNome.textContent; btnSaveNome.textContent='...'; try{ const {error}=await supabaseClient.from('musicos').update({nome: novo, aniversario: aniv||null}).eq('id', musicoId); if(!error){ showStatus(`✅ ${novo} ${aniv? '• 🎂 '+aniv:''}`); const cm=cacheMusicosNomes.find(x=> x.id===musicoId); if(cm){ cm.nome=novo; cm.aniversario=aniv||null; } const cmn=cacheMusicosNomesNorm.find(x=> x.id===musicoId); if(cmn){ cmn.nome=novo; cmn.aniversario=aniv||null; cmn._norm=normaliza(novo); } cacheAnivMap[String(musicoId)]=aniv||''; const headerB=row.querySelector('.musico-toggle b'); if(headerB) headerB.textContent=novo; const badge=row.querySelector('.musico-badge-aniv'); if(badge){ if(aniv){ badge.textContent=`🎂 ${aniv}`; badge.style.display=''; } else { badge.style.display='none'; } } const nascDiv=row.querySelector('.musico-nasc-txt'); if(nascDiv){ const dias2=diasParaAniversario(aniv); nascDiv.innerHTML=aniv? `🎂 ${aniv} ${dias2===0? '• <b class="text-amber-300">HOJE!</b>' : dias2!==null? `• falta ${dias2} dia(s)` : ''}` : '<span class="text-zinc-600">Sem aniversário — só DD/MM</span>'; } } else if(error.code==='23505'){ const {data: existente}=await supabaseClient.from('musicos').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`FUSÃO MÚSICOS\n"${inputNome.value}" → "${existente.nome}"?`)){ await fundirMusicos(existente.id, musicoId); musicosAbertos.delete(String(musicoId)); showStatus(`✅ FUNDIDO`); row.remove(); } } else throw error; }catch(e){ showStatus(e.message,true); } btnSaveNome.disabled=false; btnSaveNome.textContent=origTxt; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inputNome.value}"?`)) return; const {error}=await supabaseClient.from('musicos').delete().eq('id', musicoId); if(error) showStatus(error.message,true); else { musicosAbertos.delete(String(musicoId)); row.remove(); } }; row.querySelectorAll('.chip').forEach(ch=> ch.onclick=()=> selecionarEncontro(ch.dataset.eid)); }); }
+async function carregarMusicasMaster(){ const cont=document.getElementById('musicas-master-lista'); cont.innerHTML='<div class="text-xs text-zinc-500">Carregando...</div>'; let filtered; const q=document.getElementById('search').value.trim(); if(q) filtered=cacheMusicasNorm.filter(m=> m._normTitulo.includes(normaliza(q)) || m._normComp.includes(normaliza(q))); else filtered=[...cacheMusicasNorm]; filtered=[...filtered].sort((a,b)=> (cacheRepertorioCounts[b.id]||0)-(cacheRepertorioCounts[a.id]||0)).slice(0,250); let mapaRep={}; try{ const repAll=await loadAllPaginatedGlobal('encontro_repertorio','musica_id,encontro_id, encontros(id,numero)','encontro_id'); (repAll||[]).forEach(r=>{ if(!mapaRep[r.musica_id]) mapaRep[r.musica_id]=[]; if(r.encontros) mapaRep[r.musica_id].push(r.encontros); }); }catch(e){ console.error(e); } cont.innerHTML=filtered.map(m=>{ const vezes=cacheRepertorioCounts[m.id]||0; const badge=vezes>0?`<span class="text- bg-emerald-900/30 text-emerald-300 px-1.5 py-0.5 rounded">${vezes}x</span>`:`<span class="text- bg-amber-900/30 text-amber-300 px-1.5 py-0.5 rounded">0x</span>`; const encList=[...(mapaRep[m.id]||[])].sort((a,b)=> (b.numero||0)-(a.numero||0)); const encHtml=encList.length? encList.slice(0,6).map(e=> `<button data-eid="${e.id}" class="chip bg-zinc-700 px-1.5 py-0.5 rounded text-">#${e.numero}</button>`).join(' ')+(encList.length>6? ` <span class="text- text-zinc-500">+${encList.length-6} mais</span>`:'') : '<span class="text- text-zinc-600">Nunca tocada</span>'; return `<div class="group bg-zinc-900 border border-zinc-800 p-3 rounded"><div class="grid grid-cols-[1fr_200px_120px] gap-2"><div><div class="flex gap-2 items-center"><input value="${escapeAttr(m.titulo)}" class="edit-titulo flex-1 bg-zinc-800 border border-zinc-700 rounded p-2 text-xs">${badge}</div></div><div class="relative"><input value="${escapeAttr(m.compositores?.nome||'')}" data-comp-id="${m.compositor_id||''}" data-selected-name="${escapeAttr(m.compositores?.nome||'')}" class="edit-comp w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-xs"><div class="ac-list autocomplete-list absolute w-full bg-zinc-900 border border-zinc-700 rounded mt-1 hidden"></div></div><div class="flex gap-1"><button class="btn-save bg-emerald-600 text-white px-2 py-2 rounded text- font-bold w-full">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div></div><div class="mt-2 text- text-zinc-400"><span class="text-zinc-500">Rodas:</span> ${encHtml}</div></div>`; }).join(''); cont.querySelectorAll('.chip').forEach(ch=> ch.onclick=()=> selecionarEncontro(ch.dataset.eid)); cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inpTit=row.querySelector('.edit-titulo'); const inpComp=row.querySelector('.edit-comp'); const acList=row.querySelector('.ac-list'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); let t; inpComp.addEventListener('input', ()=>{ clearTimeout(t); const term=inpComp.value.trim(); if(inpComp.dataset.selectedName && normaliza(term)!==normaliza(inpComp.dataset.selectedName)){ inpComp.dataset.compId=''; } if(term.length<2){ acList.classList.add('hidden'); if(!term) inpComp.dataset.compId=''; return; } t=setTimeout(()=>{ const res=cacheCompositoresNorm.filter(c=> c._norm.includes(normaliza(term))).slice(0,8); if(res.length===0){ acList.classList.add('hidden'); return; } acList.innerHTML=res.map(r=> `<div class="p-1.5 hover:bg-zinc-700 cursor-pointer text-xs" data-id="${r.id}" data-nome="${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</div>`).join(''); acList.classList.remove('hidden'); acList.querySelectorAll('div').forEach(d=> d.onclick=()=>{ inpComp.value=d.dataset.nome; inpComp.dataset.compId=d.dataset.id; inpComp.dataset.selectedName=d.dataset.nome; acList.classList.add('hidden'); }); },150); }); btnSave.onclick=async()=>{ if(btnSave.disabled) return; const novoTitulo=inpTit.value.trim(); const compNome=inpComp.value.trim(); if(!novoTitulo) return; btnSave.disabled=true; const origTxt=btnSave.textContent; btnSave.textContent='...'; try{ let compId=inpComp.dataset.compId; if(compNome){ const normComp = normaliza(compNome); const cur = compId ? cacheCompositoresNorm.find(x=> x.id===compId) : null; if(!cur || cur._norm!==normComp){ const f=cacheCompositoresNorm.find(c=> c._norm===normComp); if(f) compId=f.id; else { const {data:n}=await supabaseClient.from('compositores').insert({nome: compNome}).select('id').single(); compId=n.id; const novo={id: compId, nome: compNome, _norm: normComp}; cacheCompositores.push({id: compId, nome: compNome}); cacheCompositoresNorm.push(novo); } inpComp.dataset.compId=compId; inpComp.dataset.selectedName=compNome; } } else { compId=null; } const dup=cacheMusicasNorm.find(x=> x.id!==realId && x._normTitulo===normaliza(novoTitulo) && x._normComp===normaliza(compNome)); if(dup){ if(confirm(`FUSÃO CHORO\n"${novoTitulo}" — ${compNome} já existe! Fundir?`)){ await fundirMusicas(dup.id, realId); showStatus(`✅ FUNDIDO`); row.remove(); } btnSave.disabled=false; btnSave.textContent=origTxt; return; } const {error}=await supabaseClient.from('musicas').update({titulo: novoTitulo, compositor_id: compId||null}).eq('id', realId); if(!error){ showStatus(`✅ "${novoTitulo}" → ${compNome}`); const upd={titulo: novoTitulo, compositor_id: compId, compositores: {id: compId, nome: compNome}, _normTitulo: normaliza(novoTitulo), _normComp: normaliza(compNome)}; cacheMusicas = cacheMusicas.map(m=> m.id===realId ? {...m, ...upd} : m); cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===realId ? {...m, ...upd} : m); } else if(error.code==='23505'){ const {data: existente}=await supabaseClient.from('musicas').select('id,titulo').ilike('titulo', novoTitulo).limit(1).single(); if(existente){ const exNorm=cacheMusicasNorm.find(x=> x.id===existente.id); if(exNorm && exNorm._normComp===normaliza(compNome)){ if(confirm(`FUSÃO CHORO\n"${novoTitulo}" já existe! Fundir?`)){ await fundirMusicas(existente.id, realId); showStatus(`✅ FUNDIDO`); row.remove(); } } else { showStatus(`"${novoTitulo}" existe com outro compositor. Use a fusão manual se for o mesmo choro.`, true); } } } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.disabled=false; btnSave.textContent=origTxt; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inpTit.value}"?`)) return; const {error}=await supabaseClient.from('musicas').delete().eq('id', realId); if(error) showStatus(error.message,true); else {row.remove(); delete cacheRepertorioCounts[realId]; cacheMusicas=cacheMusicas.filter(m=> m.id!==realId); cacheMusicasNorm=cacheMusicasNorm.filter(m=> m.id!==realId);} }; }); }
+async function carregarInstrumentosMaster(){ const cont=document.getElementById('instrumentos-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>'; let inst=[...cacheInstrumentos]; if(inst.length===0){ inst=await loadAllPaginatedGlobal('instrumentos','id,nome','nome'); } let filtered=[...inst]; const q=document.getElementById('search').value.trim(); if(q) filtered=inst.filter(i=> normaliza(i.nome).includes(normaliza(q))); filtered=[...filtered].sort((a,b)=> a.nome.localeCompare(b.nome)); cont.innerHTML=filtered.map(i=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(i.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text- font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join(''); cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ if(btnSave.disabled) return; const novo=inp.value.trim(); if(!novo) return; btnSave.disabled=true; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('instrumentos').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('instrumentos').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirInstrumentos(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.disabled=false; btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inp.value}"?`)) return; const {error}=await supabaseClient.from('instrumentos').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; }); }
+async function carregarCompositoresMaster(){ const cont=document.getElementById('compositores-master-lista'); cont.innerHTML='<div class="text-xs">Carregando...</div>'; let comps=[...cacheCompositores]; if(comps.length===0){ comps=await loadAllPaginatedGlobal('compositores','id,nome','nome'); } let filtered=[...comps]; const q=document.getElementById('search').value.trim(); if(q) filtered=comps.filter(c=> normaliza(c.nome).includes(normaliza(q))); filtered=[...filtered].sort((a,b)=> a.nome.localeCompare(b.nome)); cont.innerHTML=filtered.map(c=>`<div class="group flex gap-2 items-center bg-zinc-900 border border-zinc-800 p-2 rounded"><input value="${escapeAttr(c.nome)}" class="edit-input flex-1 bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs"><button class="btn-save bg-emerald-600 text-white px-2 py-1 rounded text- font-bold">Salvar / Fundir</button><button class="btn-del text-zinc-500 px-1 text-xs">✕</button></div>`).join(''); cont.querySelectorAll('.group').forEach((row, idx)=>{ const realId=filtered[idx]?.id; const inp=row.querySelector('.edit-input'); const btnSave=row.querySelector('.btn-save'); const btnDel=row.querySelector('.btn-del'); btnSave.onclick=async()=>{ if(btnSave.disabled) return; const novo=inp.value.trim(); if(!novo) return; btnSave.disabled=true; btnSave.textContent='...'; try{ const {error}=await supabaseClient.from('compositores').update({nome: novo}).eq('id', realId); if(!error) showStatus(`✅ ${novo}`); else if(error.code==='23505'){ const {data: ex}=await supabaseClient.from('compositores').select('id,nome').ilike('nome', novo).limit(1).single(); if(confirm(`Fundir "${inp.value}" → "${ex.nome}"?`)){ await fundirCompositores(ex.id, realId); row.remove(); showStatus(`✅ FUNDIDO`);} } else throw error; }catch(e){ showStatus(e.message,true); } btnSave.disabled=false; btnSave.textContent='Salvar / Fundir'; }; btnDel.onclick=async()=>{ if(!confirm(`Deletar "${inp.value}"?`)) return; const {error}=await supabaseClient.from('compositores').delete().eq('id', realId); if(error) showStatus(error.message,true); else row.remove(); }; }); }
+async function carregarOtimizacoes(){ initPesquisaListeners(); alternarSubAbaOtimizacao('pesquisa'); await carregarDadosPesquisa(); carregarLimpeza(); }
+async function carregarLimpeza(){ const el1=document.getElementById('opt-musicas-duplicatas'); const el2=document.getElementById('opt-musicos-duplicatas'); const el3=document.getElementById('opt-musicas-nunca'); if(!el1) return; el1.innerHTML='Carregando...'; const porChave={}; cacheMusicasNorm.forEach(m=>{ const k=m._normTitulo+'||'+m._normComp; if(!porChave[k]) porChave[k]=[]; porChave[k].push(`${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')} (${cacheRepertorioCounts[m.id]||0}x)`); }); const dupMusicas=Object.entries(porChave).filter(([k,v])=> v.length>1).slice(0,20).map(([k,v])=> `<div class="p-1.5 hover:bg-zinc-800 rounded border-b border-zinc-800/50"><b>${escapeHtml(k.split('||')[0])}:</b><br>${v.join('<br>')}</div>`).join(''); el1.innerHTML=dupMusicas||'<span class="text-zinc-600">Nenhuma duplicata!</span>'; const porPrimeiro={}; cacheMusicosNomesNorm.forEach(m=>{ const primeiro=normaliza(m.nome).split(' ')[0]; if(primeiro.length<3) return; if(!porPrimeiro[primeiro]) porPrimeiro[primeiro]=[]; porPrimeiro[primeiro].push(m.nome); }); const dupMusicos=Object.entries(porPrimeiro).filter(([k,v])=> v.length>1 && v.length<8).slice(0,15).map(([k,v])=> `<div class="p-1 hover:bg-zinc-800 rounded"><b>${escapeHtml(k)}:</b> ${v.map(escapeHtml).join(', ')}</div>`).join(''); el2.innerHTML=dupMusicos||'<span class="text-zinc-600">Nenhum</span>'; const nunca=cacheMusicas.filter(m=> !cacheRepertorioCounts[m.id]).slice(0,80).map(m=> `<div class="p-1 flex justify-between"><span>${escapeHtml(m.titulo)} - ${escapeHtml(m.compositores?.nome||'')}</span><span class="text- text-zinc-500">0x</span></div>`).join(''); el3.innerHTML=nunca||'<span class="text-zinc-600">Todas tocadas!</span>'; }
+async function carregarDadosPesquisa(){ if(pesquisaCache.loaded){ renderPesquisa(); return; } if(pesquisaCache.loading) return; pesquisaCache.loading=true; const st=document.getElementById('pesq-status'); if(st) st.textContent='Carregando pesquisa...'; const dbg=document.getElementById('pesq-debug'); if(dbg) dbg.textContent=''; try{ const [encs, presSimples, repSimples] = await Promise.all([ loadAllPaginatedGlobal('encontros','id,numero,data,observacoes','id'), loadAllPaginatedGlobal('encontro_musicos','musico_id,encontro_id,instrumento_id','encontro_id'), loadAllPaginatedGlobal('encontro_repertorio','musica_id,encontro_id','encontro_id') ]); if(encs.length>=20000 || presSimples.length>=20000 || repSimples.length>=20000){ if(dbg) dbg.textContent='Atenção: mais de 20000 registros em alguma tabela — os números podem estar incompletos.'; } if(dbg && !dbg.textContent) dbg.textContent=`Carregou: ${encs.length} encontros, ${presSimples.length} presenças, ${repSimples.length} repertório. Cache músicos: ${cacheMusicosNomes.length}, músicas: ${cacheMusicas.length}`; const musicoNomeById={}; cacheMusicosNomes.forEach(m=> musicoNomeById[m.id]=m.nome); const instNomeById={}; cacheInstrumentos.forEach(i=> instNomeById[i.id]=i.nome); const musicaById={}; cacheMusicas.forEach(m=> musicaById[m.id]=m); if(Object.keys(musicoNomeById).length===0 && presSimples.length>0){ const ms=await loadAllPaginatedGlobal('musicos','id,nome,aniversario','nome'); (ms||[]).forEach(m=> musicoNomeById[m.id]=m.nome); } if(Object.keys(instNomeById).length===0 && presSimples.length>0){ const ins=await loadAllPaginatedGlobal('instrumentos','id,nome','nome'); (ins||[]).forEach(i=> instNomeById[i.id]=i.nome); } if(Object.keys(musicaById).length===0 && repSimples.length>0){ const mus=await loadAllPaginatedGlobal('musicas','id,titulo,compositor_id, compositores(id,nome)','id'); (mus||[]).forEach(m=> musicaById[m.id]=m); } const pres = presSimples.map(p=> ({...p, musicos:{id:p.musico_id, nome: musicoNomeById[p.musico_id]||('ID '+p.musico_id)}, instrumentos:{id:p.instrumento_id, nome: instNomeById[p.instrumento_id]||'Sem inst'}})); const rep = repSimples.map(r=> ({...r, musicas: musicaById[r.musica_id]||{id:r.musica_id, titulo:'ID '+r.musica_id, compositores:{nome:''}}})); pesquisaCache.encontros=encs||[]; pesquisaCache.presencas=pres; pesquisaCache.repertorio=rep; pesquisaCache.loaded=true; const repCounts={}; rep.forEach(r=>{ repCounts[r.musica_id]=(repCounts[r.musica_id]||0)+1; }); pesquisaCache.repCounts=repCounts; }catch(e){ console.error(e); if(st) st.textContent='Erro: '+e.message; if(dbg) dbg.textContent='Erro: '+e.message; } pesquisaCache.loading=false; if(st) st.textContent=''; renderPesquisa(); }
+function calcularStatsPesquisa(){ const totalRodas=pesquisaCache.encontros.length; const encontroById={}; pesquisaCache.encontros.forEach(e=> encontroById[e.id]=e); const maxNumero=Math.max(0, ...pesquisaCache.encontros.map(e=> e.numero||0)); const musicosMap={}; const porEncontro={}; pesquisaCache.presencas.forEach(p=>{ const mid=p.musico_id; const nome=p.musicos?.nome||('ID '+mid); if(!musicosMap[mid]) musicosMap[mid]={id:mid,nome:nome,encontros:new Set(),instrumentos:{},primeira:null,ultima:null,ultimoNumero:0,primeiroNumero:99999}; const st=musicosMap[mid]; st.encontros.add(p.encontro_id); const instNome=p.instrumentos?.nome||'Sem inst'; st.instrumentos[instNome]=(st.instrumentos[instNome]||0)+1; const enc=encontroById[p.encontro_id]; if(enc){ if(!st.primeira || enc.data < st.primeira) st.primeira=enc.data; if(!st.ultima || enc.data > st.ultima) st.ultima=enc.data; if(enc.numero){ st.ultimoNumero=Math.max(st.ultimoNumero, enc.numero); st.primeiroNumero=Math.min(st.primeiroNumero, enc.numero); } } if(!porEncontro[p.encontro_id]) porEncontro[p.encontro_id]=[]; porEncontro[p.encontro_id].push(p); }); const musicosList=Object.values(musicosMap).map(m=>{ const count=m.encontros.size; const perc= totalRodas? (count/totalRodas*100):0; const semVir = maxNumero ? (maxNumero - m.ultimoNumero) : 0; const instTop=Object.entries(m.instrumentos).sort((a,b)=> b[1]-a[1]).map(e=> e[0]).join(', '); return {...m,count,perc,semVir,instTop,instList:Object.keys(m.instrumentos)}; }); const duplasMap={}; Object.entries(porEncontro).forEach(([eid, lista])=>{ const nomesUnicos=[...new Map(lista.map(p=> [p.musico_id, p.musicos?.nome||''])).entries()]; for(let i=0;i<nomesUnicos.length;i++) for(let j=i+1;j<nomesUnicos.length;j++){ const a=nomesUnicos[i][1], b=nomesUnicos[j][1]; if(!a||!b) continue; const key=[a,b].sort().join(' + '); duplasMap[key]=(duplasMap[key]||0)+1; } }); const duplas=Object.entries(duplasMap).sort((a,b)=> b[1]-a[1]).slice(0,10); const porEncontroCount=Object.entries(porEncontro).map(([eid, lista])=> ({eid, count:lista.length, numero: encontroById[eid]?.numero||0, data: encontroById[eid]?.data||''})).sort((a,b)=> b.count-a.count); const mediaMusicos = totalRodas ? (pesquisaCache.presencas.length/totalRodas) : 0; const mediaChoros = totalRodas ? (pesquisaCache.repertorio.length/totalRodas) : 0; const repCounts = pesquisaCache.repCounts || cacheRepertorioCounts || {}; const compStats={}; cacheMusicas.forEach(m=>{ const cn=m.compositores?.nome||'Sem compositor'; if(!compStats[cn]) compStats[cn]={nome:cn,distintas:new Set(),exec:0}; compStats[cn].distintas.add(m.id); compStats[cn].exec += (repCounts[m.id]||0); }); const compList=Object.values(compStats).map(c=> ({nome:c.nome, distintas:c.distintas.size, exec:c.exec})).sort((a,b)=> b.distintas-a.distintas).slice(0,12); const topChoros=[...cacheMusicas].sort((a,b)=> (repCounts[b.id]||0)-(repCounts[a.id]||0)).slice(0,10); const esquecidos=cacheMusicas.filter(m=> (repCounts[m.id]||0)===1).slice(0,12); return {totalRodas, maxNumero, musicosList, duplas, porEncontroCount, mediaMusicos, mediaChoros, compList, topChoros, esquecidos, encontroById, repCounts}; }
+function renderPesquisa(){ if(!pesquisaCache.loaded) return; const s=calcularStatsPesquisa(); pesquisaStats=s; document.getElementById('pesq-card-rodas').textContent=s.totalRodas; document.getElementById('pesq-card-musicos').textContent=s.musicosList.length; document.getElementById('pesq-card-media').textContent=s.mediaMusicos.toFixed(1); const topMusico=[...s.musicosList].sort((a,b)=> b.count-a.count)[0]; if(topMusico){ document.getElementById('pesq-card-top').textContent=topMusico.nome; document.getElementById('pesq-card-top-sub').textContent=`${topMusico.count} rodas • ${topMusico.perc.toFixed(0)}% presença`; } const sel=document.getElementById('pesq-instrumento'); if(sel && sel.options.length<=1){ const insts=[...new Set(pesquisaCache.presencas.map(p=> p.instrumentos?.nome).filter(Boolean))].sort(); insts.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); } const maisCheia=s.porEncontroCount[0]; const maisVazia=s.porEncontroCount[s.porEncontroCount.length-1]; document.getElementById('pesq-historia').innerHTML=`<div>Média <b>${s.mediaMusicos.toFixed(1)} músicos</b> e <b>${s.mediaChoros.toFixed(1)} choros</b> por roda</div><div>Mais cheia: <b>#${maisCheia?.numero||'?'} • ${maisCheia?.count||0} músicos</b> ${maisCheia?.data? '• '+maisCheia.data:''}</div><div>Mais vazia: <b>#${maisVazia?.numero||'?'} • ${maisVazia?.count||0} músicos</b></div><div>Total repertório: <b>${pesquisaCache.repertorio.length}</b> • Distintos tocados: <b>${Object.keys(s.repCounts).length}</b></div>`; document.getElementById('pesq-parceiros').innerHTML=s.duplas.map(([k,v])=> `<div class="flex justify-between gap-2"><span class="truncate">${escapeHtml(k)}</span><b>${v}x juntos</b></div>`).join('')||'<span class="text-zinc-500">Sem dados</span>'; document.getElementById('pesq-top-choros').innerHTML=s.topChoros.map(m=> `<div class="flex justify-between gap-2"><span class="truncate">${escapeHtml(m.titulo)} <span class="text-zinc-500">— ${escapeHtml(m.compositores?.nome||'')}</span></span><b>${s.repCounts[m.id]||0}x</b></div>`).join('')||'Sem dados'; document.getElementById('pesq-esquecidos').innerHTML=s.esquecidos.map(m=> `<div class="flex justify-between gap-2"><span class="truncate">${escapeHtml(m.titulo)}</span><span class="text-zinc-500">${escapeHtml(m.compositores?.nome||'')}</span></div>`).join('')||'Nenhum'; document.getElementById('pesq-compositores').innerHTML=s.compList.map(c=> `<div class="flex justify-between gap-2"><span class="truncate">${escapeHtml(c.nome)}</span><span><b>${c.distintas}</b> distintas • ${c.exec} exec.</span></div>`).join('')||'Sem dados'; renderFrequencia(); }
+function renderFrequencia(){ if(!pesquisaStats) return; let lista=[...pesquisaStats.musicosList]; const buscaNorm=normaliza(pesquisaFiltro.busca); if(buscaNorm) lista=lista.filter(m=> normaliza(m.nome).includes(buscaNorm) || m.instList.some(i=> normaliza(i).includes(buscaNorm))); if(pesquisaFiltro.inst) lista=lista.filter(m=> m.instList.includes(pesquisaFiltro.inst)); if(pesquisaFiltro.atalho==='sumiu') lista=lista.filter(m=> m.semVir>=8); if(pesquisaFiltro.atalho==='so1') lista=lista.filter(m=> m.count===1); if(pesquisaFiltro.ordenar==='vezes') lista.sort((a,b)=> b.count-a.count); else if(pesquisaFiltro.ordenar==='az') lista.sort((a,b)=> a.nome.localeCompare(b.nome)); else if(pesquisaFiltro.ordenar==='recente') lista.sort((a,b)=> (b.ultimoNumero||0)-(a.ultimoNumero||0)); else if(pesquisaFiltro.ordenar==='sumiu') lista.sort((a,b)=> b.semVir-a.semVir); if(pesquisaFiltro.atalho==='top10') lista=lista.slice(0,10); document.getElementById('pesq-count-freq').textContent=`${lista.length} músicos`; const cont=document.getElementById('pesq-frequencia'); if(lista.length===0){ cont.innerHTML='<div class="text-xs text-zinc-500">Nenhum músico com esse filtro.</div>'; return; } cont.innerHTML=lista.slice(0,120).map(m=>{ const semVirTxt=m.semVir===0? '<span class="text-emerald-300">na última roda</span>' : m.semVir===1? 'há 1 quinta' : `há ${m.semVir} quintas`; const aniv=getAniversarioMusico(m.id); const dias=diasParaAniversario(aniv); const nascBadge=aniv? (dias===0? '<span class="text- bg-amber-900/50 text-amber-200 px-1.5 py-0.5 rounded">🎂 HOJE</span>' : dias!==null && dias<=7? `<span class="text- bg-amber-900/30 text-amber-200 px-1.5 py-0.5 rounded">🎂 em ${dias}d • ${aniv}</span>` : `<span class="text- text-zinc-500">🎂 ${aniv}</span>`) : ''; return `<div data-mid="${m.id}" class="pesq-row flex items-center gap-2 p-2 rounded border border-transparent ${musicoSelecionadoId===m.id?'active':''}"><div class="flex-1 min-w-0"><div class="font-bold text-xs truncate">${escapeHtml(m.nome)} ${nascBadge}</div><div class="text- text-zinc-400 truncate">${escapeHtml(m.instTop||'')}</div></div><button data-ver-encontros="${m.id}" class="text- bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2 py-1 rounded font-bold whitespace-nowrap">${m.count} rodas • ${m.perc.toFixed(0)}%</button><div class="hidden md:block text- text-zinc-400 w- text-right">${m.primeira? m.primeira.slice(0,10):''} → ${m.ultima? m.ultima.slice(0,10):''}<br><span class="text-">${semVirTxt}</span></div></div>`; }).join(''); cont.querySelectorAll('.pesq-row').forEach(row=>{ row.onclick=(e)=>{ if(e.target.closest('[data-ver-encontros]')) return; mostrarRaioX(row.dataset.mid); }; }); cont.querySelectorAll('[data-ver-encontros]').forEach(btn=>{ btn.onclick=(e)=>{ e.stopPropagation(); verEncontrosDoMusico(btn.dataset.verEncontros); }; }); }
+function mostrarRaioX(musicoId){ musicoSelecionadoId=musicoId; renderFrequencia(); const s=pesquisaStats; if(!s) return; const m=s.musicosList.find(x=> String(x.id)===String(musicoId)); if(!m) return; const encontrosDoMusico=new Set(m.encontros); const parceirosCount={}; pesquisaCache.presencas.forEach(p=>{ if(encontrosDoMusico.has(p.encontro_id) && String(p.musico_id)!==String(musicoId)){ const nome=p.musicos?.nome||''; if(nome) parceirosCount[nome]=(parceirosCount[nome]||0)+1; } }); const topParceiros=Object.entries(parceirosCount).sort((a,b)=> b[1]-a[1]).slice(0,5); const chorosCount={}; (pesquisaCache.repertorio||[]).forEach(r=>{ if(encontrosDoMusico.has(r.encontro_id)){ const titulo=r.musicas?.titulo||''; const comp=r.musicas?.compositores?.nome||''; if(titulo){ const k=titulo+' — '+comp; chorosCount[k]=(chorosCount[k]||0)+1; } } }); const topChoros=Object.entries(chorosCount).sort((a,b)=> b[1]-a[1]).slice(0,6); const aniv=getAniversarioMusico(musicoId); const dias=diasParaAniversario(aniv); const nascLinha=aniv? `<div>🎂 Aniversário: <b>${aniv}</b> ${dias===0? '• <b class="text-amber-300">HOJE!</b>' : dias!==null? `• falta ${dias} dia(s)` : ''} — só pra comemorar</div>` : `<div>🎂 Aniversário: <span class="text-zinc-500">não cadastrado — preencha na aba Músicos, só DD/MM</span></div>`; const box=document.getElementById('pesq-raiox'); box.classList.remove('hidden'); document.getElementById('pesq-raiox-conteudo').innerHTML=`<div><b class="text-sm text-white">${escapeHtml(m.nome)}</b><br><span class="text-zinc-400">${escapeHtml(m.instTop)} • ${m.count} rodas • ${m.perc.toFixed(0)}% presença</span></div>${nascLinha}<div>1ª vez: <b>${m.primeira||'—'}</b> • Última: <b>${m.ultima||'—'}</b> • Sem vir há <b>${m.semVir} quintas</b></div><div><b class="text-zinc-200">Mais tocou junto:</b><br>${topParceiros.map(([n,c])=> `• ${escapeHtml(n)} — ${c}x`).join('<br>')||'Sem parceiros'}</div><div><b class="text-zinc-200">Choros que mais tocou:</b><br>${topChoros.map(([k,c])=> `• ${escapeHtml(k)} — ${c}x`).join('<br>')||'Sem choros'}</div><div class="flex gap-2 pt-1"><button id="pesq-raiox-ver-encontros" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text- font-bold">Ver encontros dele →</button></div>`; const btn=document.getElementById('pesq-raiox-ver-encontros'); if(btn) btn.onclick=()=> verEncontrosDoMusico(musicoId); }
+function verEncontrosDoMusico(musicoId){ const s=pesquisaStats; const m=s.musicosList.find(x=> String(x.id)===String(musicoId)); if(!m) return; showStatus(`Músico ${m.nome}: ${m.count} rodas.`); document.querySelector('[data-tab="encontros"]').click(); setTimeout(()=>{ const inp=document.getElementById('search'); if(inp){ inp.value=m.nome; carregarLista(); } }, 100); }
 carregarLista();
-async function selecionarEncontro(id){
-  const {data: enc}=await supabaseClient.from('encontros').select('*').eq('id', id).single();
-  encontroAtual=enc;
-  document.getElementById('det-titulo').textContent=`Encontro #${enc.numero}`;
-  document.getElementById('det-sub').textContent=`${enc.data} - ${enc.observacoes||''}`;
-  document.getElementById('encontro-form').classList.remove('hidden');
-  document.getElementById('btnSalvarEncontro').classList.remove('hidden');
-  document.getElementById('btnDeletarEncontro').classList.remove('hidden');
-  document.getElementById('edit-numero').value=enc.numero;
-  document.getElementById('edit-data').value=enc.data||'';
-  document.getElementById('edit-obs').value=enc.observacoes||'';
-  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')});
-  document.querySelector('[data-tab="encontros"]').classList.add('tab-active'); document.querySelector('[data-tab="encontros"]').classList.remove('text-zinc-400');
-  tab='encontros';
-  // FIX 1: agora consistente
-  ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{
-    const el=document.getElementById('view-'+v);
-    if(el) el.classList.toggle('hidden', v!=='encontros');
-  });
-  document.getElementById('lista').classList.remove('hidden');
-  carregarLista(); carregarMusicosEncontro(id); carregarRepertorioEncontro(id);
-  setTimeout(()=> document.getElementById('new-musica-titulo').focus(), 200);
-}
-async function carregarMusicosEncontro(encontro_id){
-  const {data}=await supabaseClient.from('encontro_musicos').select('musico_id, instrumento_id, musicos(nome), instrumentos(nome)').eq('encontro_id', encontro_id);
-  const cont=document.getElementById('musicos-encontro-lista'); document.getElementById('count-musicos').textContent=data?.length||0;
-  cont.innerHTML=(data||[]).map(r=>`<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicos?.nome||r.musico_id)}</b> - <span class="text-zinc-400">${escapeHtml(r.instrumentos?.nome||'Sem inst.')}</span></span><button data-mid="${r.musico_id}" class="btn-remove-musico-enc text-red-400 text-[11px]">Remover</button></div>`).join('');
-  cont.querySelectorAll('.btn-remove-musico-enc').forEach(b=> b.onclick=async()=>{ await supabaseClient.from('encontro_musicos').delete().eq('encontro_id', encontro_id).eq('musico_id', b.dataset.mid); carregarMusicosEncontro(encontro_id); });
-}
-async function carregarRepertorioEncontro(encontro_id){
-  const {data}=await supabaseClient.from('encontro_repertorio').select('musica_id, musicas(titulo, compositores(nome))').eq('encontro_id', encontro_id);
-  const cont=document.getElementById('repertorio-encontro-lista'); document.getElementById('count-musicas').textContent=data?.length||0;
-  cont.innerHTML=(data||[]).map(r=>`<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicas?.titulo||r.musica_id)}</b> - <span class="text-emerald-300">${escapeHtml(r.musicas?.compositores?.nome||'')}</span></span><button data-mid="${r.musica_id}" class="btn-remove-musica-enc text-red-400 text-[11px]">Remover</button></div>`).join('');
-  cont.querySelectorAll('.btn-remove-musica-enc').forEach(b=> b.onclick=async()=>{ await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontro_id).eq('musica_id', b.dataset.mid); carregarRepertorioEncontro(encontro_id); if(cacheRepertorioCounts[b.dataset.mid]){ cacheRepertorioCounts[b.dataset.mid]--; if(cacheRepertorioCounts[b.dataset.mid]<=0) delete cacheRepertorioCounts[b.dataset.mid]; } });
-}
-// FIX 7: getOrCreate usa cache, não busca tudo toda vez
-async function getOrCreate(table, nome){
-  if(!nome) return null; const norm=normaliza(nome);
-  let cache, cacheNorm;
-  if(table==='compositores'){ cache=cacheCompositores; cacheNorm=cacheCompositoresNorm; }
-  else if(table==='instrumentos'){ cache=cacheInstrumentos; cacheNorm=cacheInstrumentosNorm; }
-  else if(table==='musicos'){ cache=cacheMusicosNomes; cacheNorm=cacheMusicosNomesNorm; }
-  else { cache=[]; cacheNorm=[]; }
-  const found=cacheNorm.find(r=> r._norm===norm);
-  if(found) return cache.find(c=> c.id===found.id);
-  const {data, error}=await supabaseClient.from(table).insert({nome: nome.trim()}).select('id,nome').single();
-  if(error){
-    if(error.code==='23505'){
-      const {data: retry}=await supabaseClient.from(table).select('id,nome').ilike('nome', nome).limit(1).single();
-      if(retry){
-        // adiciona ao cache
-        if(table==='compositores'){ cacheCompositores.push(retry); cacheCompositoresNorm.push({...retry, _norm: norm}); }
-        if(table==='instrumentos'){ cacheInstrumentos.push(retry); cacheInstrumentosNorm.push({...retry, _norm: norm}); }
-        if(table==='musicos'){ cacheMusicosNomes.push(retry); cacheMusicosNomesNorm.push({...retry, _norm: norm}); }
-        return retry;
-      }
-    }
-    throw error;
-  }
-  // adiciona ao cache
-  if(table==='compositores'){ cacheCompositores.push(data); cacheCompositoresNorm.push({...data, _norm: norm}); }
-  if(table==='instrumentos'){ cacheInstrumentos.push(data); cacheInstrumentosNorm.push({...data, _norm: norm}); }
-  if(table==='musicos'){ cacheMusicosNomes.push(data); cacheMusicosNomesNorm.push({...data, _norm: norm}); }
-  return data;
-}
-document.getElementById('btnConfirmAddMusico').onclick = async()=>{
-  if(!encontroAtual) return; const nome=document.getElementById('new-musico-nome').value.trim(); const instNome=document.getElementById('new-musico-inst').value.trim(); if(!nome) return;
-  try{ const musico=await getOrCreate('musicos', nome); const inst=instNome? await getOrCreate('instrumentos', instNome) : null; const {error}=await supabaseClient.from('encontro_musicos').insert({encontro_id: encontroAtual.id, musico_id: musico.id, instrumento_id: inst?.id||null}); if(error && error.code==='23505'){ showStatus('Músico já está nessa roda', true); return; } document.getElementById('new-musico-nome').value=''; document.getElementById('new-musico-nome').dataset.id=''; document.getElementById('new-musico-inst').value=''; document.getElementById('new-musico-inst').dataset.id=''; carregarMusicosEncontro(encontroAtual.id); showStatus(`✅ ${escapeHtml(musico.nome)} adicionado`); document.getElementById('new-musico-nome').focus(); }catch(e){ showStatus(e.message, true); }
-};
-document.getElementById('btnConfirmAddMusica').onclick = async()=>{
-  if(!encontroAtual) return; 
-  const tituloEl = document.getElementById('new-musica-titulo');
-  const compEl = document.getElementById('new-musica-comp');
-  const titulo = tituloEl.value.trim(); 
-  const compNomeDigitado = compEl.value.trim(); 
-  let musicaId = tituloEl.dataset.id || null;
-  let compIdAtual = compEl.dataset.compId || null;
-  if(!titulo) return;
-  try{
-    if(compNomeDigitado){
-      const normDig = normaliza(compNomeDigitado);
-      const cur = compIdAtual ? cacheCompositoresNorm.find(x=> x.id===compIdAtual) : null;
-      if(!cur || cur._norm!==normDig){
-        const comp = await getOrCreate('compositores', compNomeDigitado);
-        compIdAtual = comp.id; compEl.dataset.compId = compIdAtual;
-      }
-    }
-    if(musicaId){
-      const musicaCache = cacheMusicas.find(m=> m.id===musicaId);
-      const originalIdReal = musicaCache?.compositor_id || tituloEl.dataset.compOriginalId;
-      if(compIdAtual && compIdAtual !== originalIdReal){
-        await supabaseClient.from('musicas').update({compositor_id: compIdAtual}).eq('id', musicaId);
-        const compObj=cacheCompositores.find(c=> c.id===compIdAtual);
-        cacheMusicas = cacheMusicas.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj} : m);
-        cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj, _normComp: normaliza(compObj?.nome||'')} : m);
-        showStatus(`✅ Compositor corrigido: "${titulo}" → ${compNomeDigitado}`);
-      }
-      const {error: errRep} = await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId});
-      if(errRep && errRep.code==='23505') showStatus('Música já está nesse repertório', true);
-      else { cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1; }
-    } else {
-      const existente = cacheMusicasNorm.find(m=> m._normTitulo===normaliza(titulo));
-      if(existente){
-        musicaId = existente.id;
-        if(compIdAtual && compIdAtual !== existente.compositor_id){
-          await supabaseClient.from('musicas').update({compositor_id: compIdAtual}).eq('id', musicaId);
-          showStatus(`✅ "${titulo}" corrigido para ${compNomeDigitado}`);
-        }
-        await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId}).catch(()=>{});
-        cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1;
-      } else {
-        let compIdParaCriar = compIdAtual;
-        if(!compIdParaCriar && compNomeDigitado){ const comp = await getOrCreate('compositores', compNomeDigitado); compIdParaCriar = comp.id; }
-        const {data: novaMusica} = await supabaseClient.from('musicas').insert({titulo, compositor_id: compIdParaCriar||null}).select('id').single();
-        musicaId = novaMusica.id;
-        const compObj=cacheCompositores.find(c=> c.id===compIdParaCriar);
-        const nova = {id: musicaId, titulo, compositor_id: compIdParaCriar, compositores: compObj, _normTitulo: normaliza(titulo), _normComp: normaliza(compNomeDigitado)};
-        cacheMusicas.push(nova); cacheMusicasNorm.push(nova);
-        cacheRepertorioCounts[musicaId]=1;
-        await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId});
-        showStatus(`✅ Música nova "${titulo}" criada`);
-      }
-    }
-    tituloEl.value=''; tituloEl.dataset.id=''; tituloEl.dataset.compOriginalId='';
-    compEl.value=''; compEl.dataset.compId=''; document.getElementById('musica-info').classList.add('hidden');
-    carregarRepertorioEncontro(encontroAtual.id); 
-    document.getElementById('count-musicas-total').textContent=cacheMusicas.length;
-    tituloEl.focus();
-  }catch(e){ showStatus(e.message, true); }
-};
-document.getElementById('btnSalvarEncontro').onclick = async()=>{
-  if(!encontroAtual) return; const numero=parseInt(document.getElementById('edit-numero').value); const data=document.getElementById('edit-data').value; const obs=document.getElementById('edit-obs').value; const {error}=await supabaseClient.from('encontros').update({numero, data, observacoes: obs}).eq('id', encontroAtual.id); if(error) showStatus(error.message, true); else { showStatus(`✅ Encontro #${numero} atualizado`); carregarLista(); }
-};
-document.getElementById('btnDeletarEncontro').onclick = async()=>{
-  if(!encontroAtual || !confirm(`Deletar encontro #${encontroAtual.numero}?`)) return; await supabaseClient.from('encontro_musicos').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontros').delete().eq('id', encontroAtual.id); encontroAtual=null; document.getElementById('encontro-form').classList.add('hidden'); document.getElementById('btnSalvarEncontro').classList.add('hidden'); document.getElementById('btnDeletarEncontro').classList.add('hidden'); document.getElementById('det-titulo').textContent='Selecione um encontro'; showStatus('Encontro deletado'); carregarLista();
-};
-document.getElementById('btnNovo').onclick = async()=>{
-  const numero=prompt('Número do novo encontro?'); if(!numero) return; const data=prompt('Data (YYYY-MM-DD)?', new Date().toISOString().slice(0,10)); const {data: novo, error}=await supabaseClient.from('encontros').insert({numero: parseInt(numero), data, observacoes: ''}).select('id').single(); if(error) showStatus(error.message, true); else { carregarLista(); selecionarEncontro(novo.id); }
-};
+async function selecionarEncontro(id){ const {data: enc}=await supabaseClient.from('encontros').select('*').eq('id', id).single(); encontroAtual=enc; document.getElementById('det-titulo').textContent=`Encontro #${enc.numero}`; document.getElementById('det-sub').textContent=`${enc.data} - ${enc.observacoes||''}`; document.getElementById('encontro-form').classList.remove('hidden'); document.getElementById('btnSalvarEncontro').classList.remove('hidden'); document.getElementById('btnDeletarEncontro').classList.remove('hidden'); document.getElementById('edit-numero').value=enc.numero; document.getElementById('edit-data').value=enc.data||''; document.getElementById('edit-obs').value=enc.observacoes||''; document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');b.classList.add('text-zinc-400')}); document.querySelector('[data-tab="encontros"]').classList.add('tab-active'); document.querySelector('[data-tab="encontros"]').classList.remove('text-zinc-400'); tab='encontros'; ['encontros','musicos','musicas','instrumentos','compositores','otimizacoes'].forEach(v=>{ const el=document.getElementById('view-'+v); if(el) el.classList.toggle('hidden', v!=='encontros'); }); document.getElementById('lista').classList.remove('hidden'); carregarLista(); carregarMusicosEncontro(id); carregarRepertorioEncontro(id); setTimeout(()=> document.getElementById('new-musica-titulo').focus(), 200); }
+async function carregarMusicosEncontro(encontro_id){ const {data}=await supabaseClient.from('encontro_musicos').select('musico_id, instrumento_id, musicos(nome,aniversario), instrumentos(nome)').eq('encontro_id', encontro_id); const cont=document.getElementById('musicos-encontro-lista'); document.getElementById('count-musicos').textContent=data?.length||0; cont.innerHTML=(data||[]).map(r=>{ const aniv=r.musicos?.aniversario; const nascHtml=aniv? `<span class="text- bg-amber-900/30 text-amber-200 px-1.5 py-0.5 rounded">🎂 ${aniv}</span>` : ''; return `<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicos?.nome||r.musico_id)}</b> - <span class="text-zinc-400">${escapeHtml(r.instrumentos?.nome||'Sem inst.')}</span> ${nascHtml}</span><button data-mid="${r.musico_id}" data-inst="${r.instrumento_id||''}" class="btn-remove-musico-enc text-red-400 text-">Remover</button></div>`; }).join(''); cont.querySelectorAll('.btn-remove-musico-enc').forEach(b=> b.onclick=async()=>{ await deleteEncontroMusico(b.dataset.mid, encontro_id, b.dataset.inst? b.dataset.inst : null); carregarMusicosEncontro(encontro_id); }); }
+async function carregarRepertorioEncontro(encontro_id){ const {data}=await supabaseClient.from('encontro_repertorio').select('musica_id, musicas(titulo, compositores(nome))').eq('encontro_id', encontro_id); const cont=document.getElementById('repertorio-encontro-lista'); document.getElementById('count-musicas').textContent=data?.length||0; cont.innerHTML=(data||[]).map(r=>`<div class="flex justify-between items-center bg-zinc-800 p-1.5 rounded text-xs"><span><b>${escapeHtml(r.musicas?.titulo||r.musica_id)}</b> - <span class="text-emerald-300">${escapeHtml(r.musicas?.compositores?.nome||'')}</span></span><button data-mid="${r.musica_id}" class="btn-remove-musica-enc text-red-400 text-">Remover</button></div>`).join(''); cont.querySelectorAll('.btn-remove-musica-enc').forEach(b=> b.onclick=async()=>{ const {error}=await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontro_id).eq('musica_id', b.dataset.mid); if(!error){ carregarRepertorioEncontro(encontro_id); if(cacheRepertorioCounts[b.dataset.mid]){ cacheRepertorioCounts[b.dataset.mid]--; if(cacheRepertorioCounts[b.dataset.mid]<=0) delete cacheRepertorioCounts[b.dataset.mid]; } } }); }
+async function getOrCreate(table, nome, extraData=null){ if(!nome) return null; const norm=normaliza(nome); let cache, cacheNorm; if(table==='compositores'){ cache=cacheCompositores; cacheNorm=cacheCompositoresNorm; } else if(table==='instrumentos'){ cache=cacheInstrumentos; cacheNorm=cacheInstrumentosNorm; } else if(table==='musicos'){ cache=cacheMusicosNomes; cacheNorm=cacheMusicosNomesNorm; } else { cache=[]; cacheNorm=[]; } const found=cacheNorm.find(r=> r._norm===norm); if(found){ const existing=cache.find(c=> c.id===found.id); if(table==='musicos' && extraData?.aniversario){ if(existing?.aniversario!==extraData.aniversario){ await supabaseClient.from('musicos').update({aniversario: extraData.aniversario}).eq('id', existing.id); existing.aniversario=extraData.aniversario; const cn=cacheMusicosNomesNorm.find(x=> x.id===existing.id); if(cn) cn.aniversario=extraData.aniversario; cacheAnivMap[String(existing.id)]=extraData.aniversario; } } return existing; } const insertObj={nome: nome.trim()}; if(table==='musicos' && extraData?.aniversario) insertObj.aniversario=extraData.aniversario; const {data, error}=await supabaseClient.from(table).insert(insertObj).select('id,nome,aniversario').single(); if(error){ if(error.code==='23505'){ const {data: retry}=await supabaseClient.from(table).select('id,nome,aniversario').ilike('nome', nome).limit(1).single(); if(retry){ if(table==='compositores'){ cacheCompositores.push(retry); cacheCompositoresNorm.push({...retry, _norm: norm}); } if(table==='instrumentos'){ cacheInstrumentos.push(retry); cacheInstrumentosNorm.push({...retry, _norm: norm}); } if(table==='musicos'){ cacheMusicosNomes.push(retry); cacheMusicosNomesNorm.push({...retry, _norm: norm}); cacheAnivMap[String(retry.id)]=retry.aniversario||''; } return retry; } } throw error; } if(table==='compositores'){ cacheCompositores.push(data); cacheCompositoresNorm.push({...data, _norm: norm}); } if(table==='instrumentos'){ cacheInstrumentos.push(data); cacheInstrumentosNorm.push({...data, _norm: norm}); } if(table==='musicos'){ cacheMusicosNomes.push(data); cacheMusicosNomesNorm.push({...data, _norm: norm}); cacheAnivMap[String(data.id)]=data.aniversario||''; } return data; }
+document.getElementById('btnConfirmAddMusico').onclick = async()=>{ const btn=document.getElementById('btnConfirmAddMusico'); if(btn.disabled) return; if(!encontroAtual) return; const nome=document.getElementById('new-musico-nome').value.trim(); const instNome=document.getElementById('new-musico-inst').value.trim(); let aniv=normalizarAniversario(document.getElementById('new-musico-nasc').value); if(document.getElementById('new-musico-nasc').value.trim() && !aniv){ showStatus('Aniversário inválido. Use DD/MM, ex: 15/03', true); return; } if(!nome) return; btn.disabled=true; const origTxt=btn.textContent; btn.textContent='...'; try{ const musico=await getOrCreate('musicos', nome, aniv? {aniversario: aniv} : null); const inst=instNome? await getOrCreate('instrumentos', instNome) : null; const {error}=await supabaseClient.from('encontro_musicos').insert({encontro_id: encontroAtual.id, musico_id: musico.id, instrumento_id: inst?.id||null}); if(error && error.code==='23505'){ showStatus('Esse músico já está nessa roda com esse instrumento.', true); return; } if(error) throw error; document.getElementById('new-musico-nome').value=''; document.getElementById('new-musico-nome').dataset.id=''; document.getElementById('new-musico-nome').dataset.selectedName=''; document.getElementById('new-musico-inst').value=''; document.getElementById('new-musico-inst').dataset.id=''; document.getElementById('new-musico-inst').dataset.selectedName=''; document.getElementById('new-musico-nasc').value=''; carregarMusicosEncontro(encontroAtual.id); showStatus(`✅ ${escapeHtml(musico.nome)} adicionado ${aniv? '• 🎂 '+aniv:''}`); document.getElementById('new-musico-nome').focus(); }catch(e){ showStatus(e.message, true); } finally{ btn.disabled=false; btn.textContent=origTxt; } };
+document.getElementById('btnConfirmAddMusica').onclick = async()=>{ const btn=document.getElementById('btnConfirmAddMusica'); if(btn.disabled) return; if(!encontroAtual) return; const tituloEl = document.getElementById('new-musica-titulo'); const compEl = document.getElementById('new-musica-comp'); const titulo = tituloEl.value.trim(); const compNomeDigitado = compEl.value.trim(); let musicaId = tituloEl.dataset.id || null; let compIdAtual = compEl.dataset.compId || null; if(!titulo) return; if(musicaId && tituloEl.dataset.selectedName && normaliza(titulo)!==normaliza(tituloEl.dataset.selectedName)){ musicaId=null; } btn.disabled=true; const origTxt=btn.textContent; btn.textContent='...'; try{ if(compNomeDigitado){ const normDig = normaliza(compNomeDigitado); const cur = compIdAtual ? cacheCompositoresNorm.find(x=> x.id===compIdAtual) : null; if(!cur || cur._norm!==normDig){ const comp = await getOrCreate('compositores', compNomeDigitado); compIdAtual = comp.id; compEl.dataset.compId = compIdAtual; compEl.dataset.selectedName = compNomeDigitado; } } if(musicaId){ const musicaCache = cacheMusicas.find(m=> m.id===musicaId); const originalIdReal = musicaCache?.compositor_id || tituloEl.dataset.compOriginalId; if(compIdAtual && compIdAtual !== originalIdReal){ const compNomeAtual=cacheCompositores.find(c=> c.id===compIdAtual)?.nome||compNomeDigitado; const outras=cacheMusicasNorm.filter(m=> m.id!==musicaId && m._normTitulo===normaliza(titulo) && m._normComp===normaliza(compNomeAtual)); if(outras.length>0){ showStatus(`Já existe "${titulo}" — ${compNomeAtual}. Não sobrescrevi. Selecione a versão certa na lista.`, true); } else { await supabaseClient.from('musicas').update({compositor_id: compIdAtual}).eq('id', musicaId); const compObj=cacheCompositores.find(c=> c.id===compIdAtual); cacheMusicas = cacheMusicas.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj} : m); cacheMusicasNorm = cacheMusicasNorm.map(m=> m.id===musicaId ? {...m, compositor_id: compIdAtual, compositores: compObj, _normComp: normaliza(compObj?.nome||'')} : m); showStatus(`✅ Compositor corrigido: "${titulo}" → ${compNomeDigitado}`); } } const {error: errRep} = await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId}); if(errRep && errRep.code==='23505') showStatus('Música já está nesse repertório', true); else { cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1; } } else { const existente = cacheMusicasNorm.find(m=> m._normTitulo===normaliza(titulo) && m._normComp===normaliza(compNomeDigitado)); if(existente){ musicaId = existente.id; await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId}).catch(()=>{}); cacheRepertorioCounts[musicaId]=(cacheRepertorioCounts[musicaId]||0)+1; } else { let compIdParaCriar = compIdAtual; if(!compIdParaCriar && compNomeDigitado){ const comp = await getOrCreate('compositores', compNomeDigitado); compIdParaCriar = comp.id; } const {data: novaMusica, error: errCriar} = await supabaseClient.from('musicas').insert({titulo, compositor_id: compIdParaCriar||null}).select('id').single(); if(errCriar) throw errCriar; musicaId = novaMusica.id; const compObj=cacheCompositores.find(c=> c.id===compIdParaCriar); const nova = {id: musicaId, titulo, compositor_id: compIdParaCriar, compositores: compObj, _normTitulo: normaliza(titulo), _normComp: normaliza(compNomeDigitado)}; cacheMusicas.push(nova); cacheMusicasNorm.push(nova); cacheRepertorioCounts[musicaId]=1; await supabaseClient.from('encontro_repertorio').insert({encontro_id: encontroAtual.id, musica_id: musicaId}); showStatus(`✅ Música nova "${titulo}" criada`); } } tituloEl.value=''; tituloEl.dataset.id=''; tituloEl.dataset.selectedName=''; tituloEl.dataset.compOriginalId=''; compEl.value=''; compEl.dataset.compId=''; compEl.dataset.selectedName=''; document.getElementById('musica-info').classList.add('hidden'); carregarRepertorioEncontro(encontroAtual.id); document.getElementById('count-musicas-total').textContent=cacheMusicas.length; tituloEl.focus(); }catch(e){ showStatus(e.message, true); } finally{ btn.disabled=false; btn.textContent=origTxt; } };
+document.getElementById('btnSalvarEncontro').onclick = async()=>{ const btn=document.getElementById('btnSalvarEncontro'); if(btn.disabled) return; if(!encontroAtual) return; const numero=parseInt(document.getElementById('edit-numero').value); const data=document.getElementById('edit-data').value; const obs=document.getElementById('edit-obs').value; if(isNaN(numero)){ showStatus('Número inválido.', true); return; } const {data: existe}=await supabaseClient.from('encontros').select('id').eq('numero', numero).neq('id', encontroAtual.id).maybeSingle(); if(existe){ showStatus(`Encontro #${numero} já existe. Use outro número.`, true); return; } btn.disabled=true; const origTxt=btn.textContent; btn.textContent='...'; try{ const {error}=await supabaseClient.from('encontros').update({numero, data, observacoes: obs}).eq('id', encontroAtual.id); if(error) showStatus(error.message, true); else { showStatus(`✅ Encontro #${numero} atualizado`); carregarLista(); } } finally{ btn.disabled=false; btn.textContent=origTxt; } };
+document.getElementById('btnDeletarEncontro').onclick = async()=>{ if(!encontroAtual || !confirm(`Deletar encontro #${encontroAtual.numero}?`)) return; await supabaseClient.from('encontro_musicos').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontro_repertorio').delete().eq('encontro_id', encontroAtual.id); await supabaseClient.from('encontros').delete().eq('id', encontroAtual.id); encontroAtual=null; document.getElementById('encontro-form').classList.add('hidden'); document.getElementById('btnSalvarEncontro').classList.add('hidden'); document.getElementById('btnDeletarEncontro').classList.add('hidden'); document.getElementById('det-titulo').textContent='Selecione um encontro'; showStatus('Encontro deletado'); carregarLista(); };
+document.getElementById('btnNovo').onclick = async()=>{ const btn=document.getElementById('btnNovo'); if(btn.disabled) return; btn.disabled=true; const textoOriginal=btn.textContent; btn.textContent='...'; try{ let proximoNumero=1; let dataSugerida=new Date().toISOString().slice(0,10); try{ const {data: ultimo}=await supabaseClient.from('encontros').select('numero,data').order('numero',{ascending:false}).limit(1).single(); if(ultimo){ proximoNumero=(parseInt(ultimo.numero)||0)+1; if(ultimo.data){ const d=new Date(ultimo.data+'T12:00:00'); d.setDate(d.getDate()+7); dataSugerida=d.toISOString().slice(0,10); } } }catch(e){} let numeroStr=prompt('Número do novo encontro? (LIVRE - pode usar 999 / 9999 para teste)', String(proximoNumero)); if(numeroStr===null) return; numeroStr=numeroStr.trim(); if(!/^\d+$/.test(numeroStr)){ showStatus('Número inválido. Use só dígitos, ex: '+proximoNumero+' ou 999 para teste', true); return; } const numero=parseInt(numeroStr,10); if(numero<=0){ showStatus('Número inválido. Use só números, ex: '+proximoNumero+' ou 999 para teste', true); return; } const {data: existe}=await supabaseClient.from('encontros').select('id').eq('numero', numero).maybeSingle(); if(existe){ showStatus(`Encontro #${numero} já existe. Use outro número para o teste.`, true); return; } let dataStr=prompt('Data (YYYY-MM-DD)? (LIVRE - pode usar qualquer data para teste)', dataSugerida); if(dataStr===null) return; dataStr=dataStr.trim(); if(!/^\d{4}-\d{2}-\d{2}$/.test(dataStr) || isNaN(new Date(dataStr+'T12:00:00').getTime())){ showStatus('Data inválida. Use YYYY-MM-DD, ex: '+dataSugerida, true); return; } const {data: novo, error}=await supabaseClient.from('encontros').insert({numero, data: dataStr, observacoes: ''}).select('id').single(); if(error){ if(error.code==='23505') showStatus(`Encontro #${numero} já existe (duplicado).`, true); else showStatus(error.message, true); return; } showStatus(`✅ Encontro #${numero} criado - ${dataStr}`); await carregarLista(); await selecionarEncontro(novo.id); } finally { btn.disabled=false; btn.textContent=textoOriginal; } };
 </script>
 </body>
 </html>
